@@ -95,8 +95,8 @@ export const caclulateDelay = async (tripId, busId, busPos) => {
     const curtime = now / 1000;
     const shouldBe = (curtime - start) / (end - start);
     const rawDelay = curtime - (shouldBe + start);
-    const delay = Math.round(((rawDelay / 60) * -1) * 10) / 10;
+    const delay = Math.round(rawDelay * -1);
 
-    return [delay, closestSeq.center];
+    return delay;
     
 }

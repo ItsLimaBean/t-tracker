@@ -2,6 +2,9 @@
     import maplibregl from "maplibre-gl";
 	import { onMount } from "svelte";
     import { PUBLIC_MAPTILER_KEY } from "$env/static/public";
+    const MapZoomTextThreshold = 14; // Threshold of when to allow text overlap
+    const MapZoomIconSizeThreshold = 12; // Threshold of when to change to larger icons
+
     let containerElement;
     let map;
     let mapReady = false;
@@ -17,13 +20,17 @@
         updateBuses();
     }
 
+    let debug = {
+        zoom: -1
+    }
+
     onMount(() => {
         map = new maplibregl.Map({
             container: containerElement,
             style: `https://api.maptiler.com/maps/streets-v2/style.json?key=${PUBLIC_MAPTILER_KEY}`,
             center: [-122.9656204, 49.2204609],
             zoom: 11,
-            //maxBounds: [[-123.506427,48.949414],[-122.029941,49.48535]]
+            maxBounds: [[-123.506427,48.949414],[-122.029941,49.48535]]
         });
 
         map.on("load", async () => {
@@ -70,12 +77,34 @@
                 "layout": {
                     "icon-allow-overlap": true,
                     "icon-image": ["get", "marker"],
-                    "icon-size": 36/512,
-                    "text-allow-overlap": true,
-                    "text-field": ["get", "id"],
-                    "text-offset": [0, 1.35],
-                    "text-size": 11,
+                    "icon-size": ["step",
+                        ["zoom"],
+                        24/512,
+                        MapZoomIconSizeThreshold, 36/512
+                    ],
+                    "text-allow-overlap": ["step",
+                        ["zoom"],
+                        false,
+                        MapZoomTextThreshold, true
+                    ],
+                    "text-optional": true,
+                    //"text-field": ["get", "text"],
+                    "text-field": ["get", "text"],
+                    "text-offset": [0, 0.7],
+                    "text-size": 9.5,
+                    "text-justify": "center",
+                    "symbol-sort-key": ["get", "z-index"],
+                    "symbol-z-order": "viewport-y"
                     // "icon-size": ['interpolate', ['linear'], ['zoom'], 8, 10/512, 12, 36/512]
+                },
+                "paint": {
+                    "text-halo-color": "rgba(0, 0, 0, 1)",
+                    "text-halo-width": .3,
+                    "text-opacity": ["step", 
+                        ["zoom"],
+                        0.0,
+                        MapZoomIconSizeThreshold, 1.0
+                    ]
                 }
             });
             
@@ -109,7 +138,10 @@
 
             requestBuses();
             mapReady = true;
-
+            
+            setInterval(() => {
+                debug.zoom = map.getZoom();
+            }, 100)
         });
 
         
@@ -134,8 +166,10 @@
                     "type": "Feature",
                     "properties": {
                         "id": `${value.id}`,
+                        "text": `${value.route}\n\n${value.id}`,
                         "shape": `${value.shape}`,
-                        "marker": "bus_unk"
+                        "marker": `${value.icon}`,
+                        "z-index": i,
                     },
                     "geometry": {
                         "type": "Point",
@@ -191,16 +225,45 @@
 
     const getBusHTML = (bus) => {
         return `<span style="font-weight: bold;">${bus.route} ${bus.dest}</span>
-                <br>Delay: ${bus.delay[0]}
+                <br>Delay: ${formatDelayTime(bus.delay)}
                 <br>Vehicle ${bus.id}
                 <br>Direction: ${bus.dir}
                 <br><small>Updated: ${bus.updated}</small>`;
+    }
+
+    const formatDelayTime = (delay) => {
+        let displayText = [];
+        let endText = "behind.";
+        if (delay > 0) {
+            endText = "ahead."
+        } else if (delay === 0) {
+            return "On time.";
+        }
+
+        delay = Math.abs(delay);
+        const hours = Math.floor((delay / 60) / 60);
+        const minutes = Math.floor(delay / 60) % 60;
+        const seconds = Math.floor(delay) % 60;
+
+        if (hours > 0) displayText.push(`${hours}h`);
+        if (minutes > 0) displayText.push(`${minutes}m`);
+        if (seconds > 0) displayText.push(`${seconds}s`);
+        displayText.push(endText);
+
+        return displayText.join(" ");
     }
 
 </script>
 
 
 <main>
+
+    <div style="position: absolute; background-color: white; z-index:9999;">
+        <span>DEBUG:</span>
+        <div>
+            Zoom: {debug.zoom}
+        </div>
+    </div>
     <div class="map-container">
         <div class="map" bind:this={containerElement}></div>
     </div>
