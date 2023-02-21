@@ -1,4 +1,5 @@
 <script>
+    //TODO: Rewrite this file, it's a mess and can be split up.
     import maplibregl from "maplibre-gl";
 	import { onMount } from "svelte";
     import { PUBLIC_MAPTILER_KEY } from "$env/static/public";
@@ -15,7 +16,8 @@
 
     let shapeCache = {};
 
-    let popup = { bus: 0, instance: undefined };
+    let popup = { bus: 0, instance: undefined, busImage: undefined };
+
 
     $: if (buses && mapReady === true) {
         updateBuses();
@@ -32,7 +34,7 @@
             center: [-122.9656204, 49.2204609],
             zoom: 11,
             maxBounds: [[-123.506427,48.949414],[-122.029941,49.48535]],
-            customAttribution: ``
+            customAttribution: `Bus Images Via <a href="https://cptdb.ca/wiki/">CPTDB Wiki</a>`
         });
 
         map.on("load", async () => {
@@ -111,7 +113,6 @@
             
             
             map.on("click", "buses", async (event) => {
-                event.cancel = true;
                 
                 const properties = event.features[0].properties;
                 const bus = findBus(properties.id);
@@ -120,6 +121,14 @@
                     .setHTML(getBusHTML(bus))
                     .setLngLat([bus.lng, bus.lat])
                     .addTo(map);
+
+                popup.instance.on("close", () => {
+                    popup.busImage?.remove();
+                    popup.busImage = undefined;
+                    map.getSource("route").setData(blankLines());
+                });
+
+                setBusImage(bus);
 
                 const shape = properties.shape;
                 if (!shapeCache[shape]) {
@@ -130,11 +139,6 @@
             
 
             
-            });
-            map.on("click", (event) => {
-                if (!event.cancel) {
-                    map.getSource("route").setData(blankLines());
-                }
             });
             
             map.on("mouseenter", "buses", () => map.getCanvas().style.cursor = "pointer");
@@ -161,7 +165,7 @@
         setTimeout(requestBuses, 15000);
     }
 
-    const updateBuses = () => {
+    const updateBuses = async () => {
         const geoJson = {
 
             "type": "FeatureCollection",
@@ -192,9 +196,12 @@
         if (!bus && popup.instance) {
             popup.instance.remove();
             popup.instance = undefined;
+            popup.busImage = undefined;
         } else if (bus && popup.instance) {
             popup.instance.setLngLat([bus.lng, bus.lat])
                 .setHTML(getBusHTML(bus));
+
+            setBusImage(bus);
         }
     }
 
@@ -232,7 +239,8 @@
                 <br>Vehicle ${bus.model.displayId} - <small>${bus.model.operator}</small>
                 <br><small>${bus.model.name}</small>
                 <br><small>Next Stop: ${bus.nextStop}</small>
-                <br><small>Updated: ${bus.updated}</small>`;
+                <br><small>Updated: ${bus.updated}</small>
+                <br><div class="popup-image-wrapper"><img class="loader" src="../spinner.svg" alt="Bus ${bus.model.displayId}"/></div>`;
     }
 
     const formatDelayTime = (delay) => {
@@ -257,6 +265,49 @@
         displayText.push(endText);
 
         return displayText.join(" ");
+    }
+
+    const setBusImage = async (bus) => {
+        const wrapper = () => { return document.querySelector(".popup-image-wrapper") };
+
+        if (popup.busImage) {
+            const imgWrapper = wrapper();
+            imgWrapper.firstChild.remove();
+            imgWrapper.appendChild(popup.busImage);
+            return;
+        }
+
+
+        let url;
+        switch (bus.model.operator) {
+            case "CMBC":
+                url = `https://cptdb.ca/wiki/thumb.php?f=Coast_Mountain_Bus_Company_${bus.model.displayId}-a.jpg&w=200`;
+                break;
+            case "Blue Bus":
+                url = `https://cptdb.ca/wiki/thumb.php?f=West_Vancouver_Municipal_Transit_${bus.model.displayId}-a.jpg&w=200`;
+                break;
+        }
+
+        if (typeof url !== "string") throw new TypeError("\"" + (typeof url) + "\" !== \"string\"\nCould not load image for " + bus.model.displayId);
+
+        popup.busImage = new Image();
+        popup.busImage.onload = (e) => {
+            const imgWrapper = wrapper();
+            if (popup.busImage && imgWrapper) {
+                imgWrapper.firstChild.remove();
+                imgWrapper.appendChild(popup.busImage);
+            }
+        };
+        popup.busImage.onerror = (event) => {
+            const imgWrapper = wrapper();
+            if (imgWrapper) {
+                imgWrapper.firstChild.remove();
+                popup.busImage = undefined;
+            }
+            
+        }
+        popup.busImage.crossOrigin = undefined;
+        popup.busImage.src = url;
     }
 
 </script>
@@ -290,4 +341,18 @@
     .map-container {
         height: 100vh;
     }
+
+    :global(.popup-image-wrapper) {
+        max-height: 100px;
+        line-height: 100px;
+        justify-content: center;
+        display: flex;
+        transition: linear 2s;
+        
+    }
+
+    :global(.popup-image-wrapper > img) {
+        object-fit: contain;
+    }
+
 </style>
