@@ -31,7 +31,8 @@
             style: `https://api.maptiler.com/maps/streets-v2/style.json?key=${PUBLIC_MAPTILER_KEY}`,
             center: [-122.9656204, 49.2204609],
             zoom: 11,
-            maxBounds: [[-123.506427,48.949414],[-122.029941,49.48535]]
+            maxBounds: [[-123.506427,48.949414],[-122.029941,49.48535]],
+            customAttribution: ``
         });
 
         map.on("load", async () => {
@@ -126,6 +127,9 @@
                 }
 
                 map.getSource("route").setData(shapeCache[shape]);
+            
+
+            
             });
             map.on("click", (event) => {
                 if (!event.cancel) {
@@ -227,10 +231,13 @@
                 <br>${bus.dir} - <span style="color: #${BusDelayColors[bus.icon]};"><strong>${formatDelayTime(bus.delay)}</strong></span>
                 <br>Vehicle ${bus.model.displayId} - <small>${bus.model.operator}</small>
                 <br><small>${bus.model.name}</small>
+                <br><small>Next Stop: ${bus.nextStop}</small>
                 <br><small>Updated: ${bus.updated}</small>`;
     }
 
     const formatDelayTime = (delay) => {
+        if (delay === undefined || delay === null) return "Unknown.";
+
         let displayText = [];
         let endText = "behind";
         if (delay > 0) {

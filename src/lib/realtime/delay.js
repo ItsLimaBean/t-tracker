@@ -7,9 +7,9 @@ import { getDateStr, getTimestamp } from "../timeutil";
 // NOTE: This fixes issuses where two route shape points
 //       are placed on top of eachother, causing time
 //       prediction to be wilding skewed.
-const MinShapeSpacing = 0.050; // 50 meters
+const MinShapeSpacing = 0.025; // 25 meters
 
-export const buildShapeTimes = async (tripId, busId, busPos) => {
+export const buildShapeTimes = async (tripId) => {
     const shapeId = gtfs.trips[tripId].shapeId;
 
     const shape = gtfs.shapes[shapeId].shape;
@@ -37,7 +37,8 @@ export const buildShapeTimes = async (tripId, busId, busPos) => {
                 lastDist = shapeDist
                 let timeoffset = (shapeDist - stopTimes[stopSeq].distance) / (stopTimes[nextSeq].distance - stopTimes[stopSeq].distance)
                 timeoffset *= (endTime - fromTime);
-                shapeTimes[si] = { departure_time: (fromTime + timeoffset), pos: shape[si].pos }
+
+                shapeTimes[si] = { departure_time: (fromTime + timeoffset), pos: shape[si].pos, shapeSeq: si };
             } 
         }
 
@@ -53,8 +54,8 @@ export const getCenterPoints = async (shape) => {
 
         if (shape[next] === undefined) continue;
         centres.push({
-            fromStop: shape[i].departure_time,
-            nextStop: shape[next].departure_time,
+            fromShape: shape[i],
+            nextShape: shape[next],
             center: getLngLatCenter([shape[i].pos, shape[next].pos])
         });
     }
@@ -67,7 +68,7 @@ export const findCurrentStop = async (busPos, shapeTimes) => {
     let closestSeq;
     for (let seq of shapeTimes) {
         const dist = calcCrow(busPos, seq.center)
-        if (dist < closestDist && seq.fromStop !== seq.nextStop) {
+        if (dist < closestDist) {
             closestDist = dist;
             closestSeq = seq;
         }
@@ -76,21 +77,11 @@ export const findCurrentStop = async (busPos, shapeTimes) => {
     return closestSeq
 }
 
-export const caclulateDelay = async (tripId, busId, busPos) => {
-    const shapeTimes = await buildShapeTimes(tripId, busId, busPos);
-
-    const centers = await getCenterPoints(shapeTimes);
-
-
-    const closestSeq = await findCurrentStop(busPos, centers);
-    // get the closest center of two shape points,
-    // we use center to more easily calculate the next and last stop.
-    
-    
+export const caclulateDelay = async (closestSeq) => {
     const now = new Date().getTime();
 
-    const start = closestSeq.fromStop / 1000;
-    const end = closestSeq.nextStop / 1000;
+    const start = closestSeq.fromShape.departure_time / 1000;
+    const end = closestSeq.nextShape.departure_time / 1000;
 
     const curtime = now / 1000;
     const shouldBe = (curtime - start) / (end - start);

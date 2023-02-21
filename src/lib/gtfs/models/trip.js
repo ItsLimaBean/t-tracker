@@ -6,6 +6,7 @@ export class Trip extends BaseModel {
         this.routeId = this.get("route_id");
         this.tripId = this.get("trip_id");
         this.shapeId = this.get("shape_id");
+        this.registered();
     }
 
     static index = () => {

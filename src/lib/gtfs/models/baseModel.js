@@ -6,7 +6,13 @@ export class BaseModel {
     }
 
     get = (name) => {
+        if (this.headers === undefined || this.row === undefined) throw new Error("get(name) unavailable after this.registered is called.");
         return BaseModel.getColumn(name, this.headers, this.row);
+    }
+
+    registered = () => {
+        this.headers = undefined;
+        this.row = undefined;
     }
 
     static getColumn = (name, headers, row) => {

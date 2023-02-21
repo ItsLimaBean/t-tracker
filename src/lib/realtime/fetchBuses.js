@@ -10,7 +10,11 @@ export const fetchBuses = async () => {
             }
         });
 
-        if (fetchData.status !== 200) {
+        if (fetchData.status === 500) {
+            throw new Error(await fetchData.text())
+        }
+
+        if (fetchData.status !== 200 ) {
             throw new Error("Failed to fetch buses. Status Code: " + fetchData.status);
         }
 

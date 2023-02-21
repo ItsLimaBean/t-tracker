@@ -5,6 +5,7 @@ export class Shape extends BaseModel {
         super(row, headers);
         this.shapeId = this.get("shape_id");
         this.shape = this.get("shape");
+        this.registered();
     }
 
     static index = () => {

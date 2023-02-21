@@ -4,6 +4,7 @@ import { GTFSFile } from "./gtfsFile";
 import { Shape } from "./models/shape";
 import { Trip } from "./models/trip";
 import { StopTime } from "./models/stoptimes";
+import { Stop } from "./models/stop";
 
 let initState = 0;
 let statePromise;
@@ -58,15 +59,17 @@ export const loadGTFS = async () => {
 
     const trips = new GTFSFile(zipObj.files["trips.txt"].nodeStream(), Trip);    
     const shapes = new GTFSFile(zipObj.files["shapes.txt"].nodeStream(), Shape);
-    const stopTimes = new GTFSFile(zipObj.files["stop_times.txt"].nodeStream(), StopTime)
+    const stopTimes = new GTFSFile(zipObj.files["stop_times.txt"].nodeStream(), StopTime);
+    const stops = new GTFSFile(zipObj.files["stops.txt"].nodeStream(), Stop);
 
     await Promise.all([
         trips.fromCsv(),
         shapes.fromCsv(),
         stopTimes.fromCsv(),
+        stops.fromCsv()
     ])
     
-    await gtfs.build(trips, shapes, stopTimes);
+    await gtfs.build(trips, shapes, stopTimes, stops);
     console.log("Unpacked GTFS data!");
 
     console.log("Ready!");

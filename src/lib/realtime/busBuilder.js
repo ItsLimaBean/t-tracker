@@ -1,6 +1,7 @@
 import gtfs from "../gtfs/gtfsSingleton";
-import { caclulateDelay } from "./delay";
+import { caclulateDelay, buildShapeTimes, getCenterPoints, findCurrentStop } from "./delay";
 import { getBusModelInfo } from "../gtfs/fleet";
+import { findNextStopFromShape } from "./stoputil";
 
 export const getBusIcon = (delay) => {
     if (delay === null || delay === undefined) {
@@ -25,24 +26,38 @@ const Directions = {
 
 export const buildBuses = async (apiBuses) => {
     let buses = [];
+    let first = 0;
     for (const bus of apiBuses) {
         
         try {
-            const delay = await caclulateDelay(bus.TripId.toString(), bus.VehicleNo, [bus.Longitude, bus.Latitude]);
+
+
+            const busPos = [bus.Longitude, bus.Latitude];
+            const busTrip = bus.TripId.toString();
+            const busTripShape = gtfs.trips[busTrip].shapeId
+
+            const shapeTimes = await buildShapeTimes(busTrip);
+            const centers = await getCenterPoints(shapeTimes);
+            
+            const closestSeq = await findCurrentStop(busPos, centers);
+            const delay = await caclulateDelay(closestSeq);
+            const nextStop = await findNextStopFromShape(busTrip, busTripShape, closestSeq.nextShape.shapeSeq);
 
             buses.push({
                 dest: bus.Destination,
                 dir: Directions[bus.Direction],
                 lat: bus.Latitude,
                 lng: bus.Longitude,
-                trip: bus.TripId,
+                trip: busTrip,
                 updated: bus.RecordedTime,
                 id: bus.VehicleNo,
                 route: bus.RouteNo,
-                shape: gtfs.trips[bus.TripId.toString()].shapeId || '279902',
+                shape: busTripShape,
                 delay: delay,
                 icon: getBusIcon(delay),
-                model: getBusModelInfo(bus.VehicleNo)
+                model: getBusModelInfo(bus.VehicleNo),
+                nextStop: nextStop?.stopName,
+                
             });
         } catch (err) {
             console.log("Failed building bus " + bus.VehicleNo)

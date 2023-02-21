@@ -5,6 +5,7 @@ export class StopTime extends BaseModel {
         super(row, headers);
         this.tripId = this.get("trip_id");
         this.times = this.get("times");
+        this.registered();
     }
 
     static index = () => {

@@ -2,7 +2,7 @@ import { get } from "svelte/store";
 import { fetchBuses } from "../fetchBuses";
 import { buses, cacheTime } from "./cacheStore";
 
-const BusCacheTime = 30; // use at least 120 for production
+const BusCacheTime = 90; // use at least 120 for production
 
 export const getBuses = async (timestamp) => {
 
