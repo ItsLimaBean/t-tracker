@@ -2,6 +2,7 @@
     import maplibregl from "maplibre-gl";
 	import { onMount } from "svelte";
     import { PUBLIC_MAPTILER_KEY } from "$env/static/public";
+    import { BusDelayColors } from "../../lib/colors";
     const MapZoomTextThreshold = 14; // Threshold of when to allow text overlap
     const MapZoomIconSizeThreshold = 12; // Threshold of when to change to larger icons
 
@@ -93,7 +94,6 @@
                     "text-offset": [0, 0.7],
                     "text-size": 9.5,
                     "text-justify": "center",
-                    "symbol-sort-key": ["get", "z-index"],
                     "symbol-z-order": "viewport-y"
                     // "icon-size": ['interpolate', ['linear'], ['zoom'], 8, 10/512, 12, 36/512]
                 },
@@ -166,10 +166,9 @@
                     "type": "Feature",
                     "properties": {
                         "id": `${value.id}`,
-                        "text": `${value.route}\n\n${value.id}`,
+                        "text": `${value.route}\n\n${value.model.displayId}`,
                         "shape": `${value.shape}`,
-                        "marker": `${value.icon}`,
-                        "z-index": i,
+                        "marker": `bus_${value.icon}`,
                     },
                     "geometry": {
                         "type": "Point",
@@ -225,19 +224,19 @@
 
     const getBusHTML = (bus) => {
         return `<span style="font-weight: bold;">${bus.route} ${bus.dest}</span>
-                <br>Delay: ${formatDelayTime(bus.delay)}
-                <br>Vehicle ${bus.id}
-                <br>Direction: ${bus.dir}
+                <br>${bus.dir} - <span style="color: #${BusDelayColors[bus.icon]};"><strong>${formatDelayTime(bus.delay)}</strong></span>
+                <br>Vehicle ${bus.model.displayId} - <small>${bus.model.operator}</small>
+                <br><small>${bus.model.name}</small>
                 <br><small>Updated: ${bus.updated}</small>`;
     }
 
     const formatDelayTime = (delay) => {
         let displayText = [];
-        let endText = "behind.";
+        let endText = "behind";
         if (delay > 0) {
-            endText = "ahead."
+            endText = "ahead"
         } else if (delay === 0) {
-            return "On time.";
+            return "On time";
         }
 
         delay = Math.abs(delay);

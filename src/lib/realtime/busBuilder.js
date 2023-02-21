@@ -1,18 +1,26 @@
 import gtfs from "../gtfs/gtfsSingleton";
 import { caclulateDelay } from "./delay";
+import { getBusModelInfo } from "../gtfs/fleet";
 
 export const getBusIcon = (delay) => {
     if (delay === null || delay === undefined) {
-        return "bus_unk";
+        return "unk";
     } else if (delay > 60.0) {
-        return "bus_early";
+        return "early";
     } else if (delay >= -2 * 60) {
-        return "bus_ontime";
+        return "ontime";
     } else if (delay >= -10 * 60) {
-        return "bus_late";
+        return "late";
     } else {
-        return "bus_verylate";
+        return "verylate";
     }
+}
+
+const Directions = {
+    "NORTH": "Northbound",
+    "EAST": "Eastbound",
+    "SOUTH": "Southbound",
+    "WEST": "Westbound"
 }
 
 export const buildBuses = async (apiBuses) => {
@@ -24,7 +32,7 @@ export const buildBuses = async (apiBuses) => {
 
             buses.push({
                 dest: bus.Destination,
-                dir: bus.Direction,
+                dir: Directions[bus.Direction],
                 lat: bus.Latitude,
                 lng: bus.Longitude,
                 trip: bus.TripId,
@@ -33,7 +41,8 @@ export const buildBuses = async (apiBuses) => {
                 route: bus.RouteNo,
                 shape: gtfs.trips[bus.TripId.toString()].shapeId || '279902',
                 delay: delay,
-                icon: getBusIcon(delay)
+                icon: getBusIcon(delay),
+                model: getBusModelInfo(bus.VehicleNo)
             });
         } catch (err) {
             console.log("Failed building bus " + bus.VehicleNo)
