@@ -117,14 +117,15 @@
                 const properties = event.features[0].properties;
                 const bus = findBus(properties.id);
                 popup.bus = bus.id;
+                popup.instance?.remove();
+                popup.busImage?.remove();
+                popup.busImage = undefined;
                 popup.instance = new maplibregl.Popup({offset: [0, -18]})
                     .setHTML(getBusHTML(bus))
                     .setLngLat([bus.lng, bus.lat])
                     .addTo(map);
 
                 popup.instance.on("close", () => {
-                    popup.busImage?.remove();
-                    popup.busImage = undefined;
                     map.getSource("route").setData(blankLines());
                 });
 
@@ -290,7 +291,7 @@
 
         if (typeof url !== "string") throw new TypeError("\"" + (typeof url) + "\" !== \"string\"\nCould not load image for " + bus.model.displayId);
 
-        popup.busImage = new Image();
+        popup.busImage = new Image(200);
         popup.busImage.onload = (e) => {
             const imgWrapper = wrapper();
             if (popup.busImage && imgWrapper) {
@@ -306,6 +307,7 @@
             }
             
         }
+        popup.busImage.loading = "eager";
         popup.busImage.crossOrigin = undefined;
         popup.busImage.src = url;
     }
