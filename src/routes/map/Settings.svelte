@@ -1,7 +1,7 @@
 <script>
 	import { Modal } from "bootstrap";
 	import { onMount, onDestroy } from "svelte";
-	import { ShowBusPicture, ShowBusPictureKey } from "./store";
+	import { ShowBusPicture, ShowBusPictureKey, ShowBusStopsOnRouteKey, ShowBusStopsOnRoute } from "./store";
 
 
     export let map;
@@ -22,6 +22,12 @@
             label: "Show bus popup images",
             value: $ShowBusPicture,
             update: (_this) => $ShowBusPicture = _this.value
+        },
+        {
+            id: ShowBusStopsOnRouteKey,
+            label: "Show bus stops along route",
+            value: $ShowBusStopsOnRoute,
+            update: (_this) => $ShowBusStopsOnRoute = _this.value
         }
     ]
 

@@ -3,9 +3,10 @@
     import { onMount, onDestroy } from "svelte";
     import { PUBLIC_MAPTILER_KEY } from "$env/static/public";
     import { loadImages } from "../../lib/map/images";
-    import { emptyLineString, routeLayerStyle, busesLayerStyle, generateBuses } from "../../lib/map/geojson";
+    import { emptyLineString, routeLayerStyle, busesLayerStyle, generateBuses, routeStopsLayerStyle, emptyCollection } from "../../lib/map/geojson";
+    import { ShowBusStopsOnRoute } from "./store";
     import Popup from "./Popup.svelte"
-	import Settings from "./Settings.svelte";
+    import Settings from "./Settings.svelte";
 
     export let requestUrl; //../api/buses
 
@@ -15,6 +16,7 @@
 
     let cacheId = -1;
     const shapeCache = {};
+    const stopsCache = {};
 
     let buses;
     let selectedBus;
@@ -23,9 +25,27 @@
 
     let updateInterval;
 
+    const debug = { zoom: -1 }
+
     $: if (mapReady && buses) {
         updateBuses();
     }
+
+
+    $: if (selectedBus) {
+        loadShape(selectedBus.shape, selectedBus.color.color);
+        if ($ShowBusStopsOnRoute) {
+            loadStops(selectedBus.trip);
+        } else {
+            map.getSource("route_stops").setData(emptyCollection);
+        }
+    }
+
+    $: if (!selectedBus && mapReady) {
+        map.getSource("route").setData(emptyLineString);
+        map.getSource("route_stops").setData(emptyCollection);
+    }
+
 
     const updateBuses = () => {
         const geoJson = generateBuses(buses);
@@ -50,17 +70,11 @@
         }
     }
 
-    const onPopupClose = (event) => {
-        map?.getSource("route").setData(emptyLineString);
-        if (event.id === selectedBus.id) {
+    const onPopupClose = (event) => {       
+        if (event.detail.busId === selectedBus.id) {
             selectedBus = undefined;
         }
     }
-
-    const onPopupOpen = async (event) => {
-        await loadShape(selectedBus.shape, selectedBus.color.color);
-    }
-
     const loadShape = async (shapeId, color) => {
         if (!shapeCache[shapeId]) {
             shapeCache[shapeId] = await (await fetch(`../api/shapes/${shapeId}`)).json();
@@ -69,6 +83,16 @@
 
         if (shapeId === selectedBus.shape) {
             map.getSource("route").setData(shapeCache[shapeId]);
+        }
+    }
+
+    const loadStops = async (tripId) => {
+        if (!stopsCache[tripId]) {
+            stopsCache[tripId] = await (await fetch(`../api/stops/${tripId}`)).json();
+        }
+
+        if (tripId === selectedBus.trip) {
+            map.getSource("route_stops").setData(stopsCache[tripId]);
         }
     }
 
@@ -86,6 +110,10 @@
         });
 
         map.on("load", async () => {
+            debug.interval = setInterval(() => {
+                debug.zoom = map.getZoom();
+            }, 100)
+
             await loadImages(map, [
                 [ "bus_unk", "../busicons/icon.png" ],
                 [ "bus_early", "../busicons/icon_early.png" ],
@@ -96,15 +124,17 @@
 
             map.addSource("buses", {
                 "type": "geojson",
-                "data": {
-                    "type": "FeatureCollection",
-                    "features": []
-                }
+                "data": emptyCollection
             });
 
             map.addSource("route", {
                 "type": "geojson",
                 "data": emptyLineString
+            });
+
+            map.addSource("route_stops", {
+                "type": "geojson",
+                "data": emptyCollection
             });
 
             map.on("click", "buses", async (event) => {
@@ -118,6 +148,7 @@
             map.on("mouseleave", "buses", () => map.getCanvas().style.cursor = "");
 
             map.addLayer(routeLayerStyle);
+            map.addLayer(routeStopsLayerStyle);
             map.addLayer(busesLayerStyle);
 
             map.addControl(new maplibregl.NavigationControl(), "top-left");
@@ -127,18 +158,32 @@
     });
 
     onDestroy(() => {
+        mapReady = false;
         map?.remove();
         map = undefined;
         clearInterval(updateInterval);
+        clearInterval(debug.interval);
     })
 </script>
 
 <div class="map" bind:this={containerElement}></div>
-<Popup bus={selectedBus} map={map} mapReady={mapReady} on:close={onPopupClose} on:open={onPopupOpen}></Popup>
+<!-- <Popup bus={selectedBus} map={map} mapReady={mapReady} on:close={onPopupClose} on:open={onPopupOpen}></Popup> -->
+<Popup bus={selectedBus} map={map} mapReady={mapReady} on:close={onPopupClose}></Popup>
 <Settings map={map} mapReady={mapReady} ></Settings>
+
+<div class="debug">
+    Zoom: {debug.zoom }
+</div>
 
 <style>
     @import "maplibre-gl/dist/maplibre-gl.css";
+
+    .debug {
+        top: 0;
+        left: 50px;
+        position: absolute;
+        background-color: white;
+    }
 
     .map {
         width: 100%;

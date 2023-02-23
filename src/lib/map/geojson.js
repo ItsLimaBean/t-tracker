@@ -1,5 +1,7 @@
 export const MapZoomTextThreshold = 14; // Threshold of when to allow text overlap
 export const MapZoomIconSizeThreshold = 12; // Threshold of when to change to larger icons
+export const MapZoomStopIconFullOpacity = 13; // The zoom level when a bus stop icon should be fully visible.
+export const MapZoomStopIconShowText = 15; // The zoom level of when bus stop text should be visible.
 
 export const emptyLineString = {
     "type": "Feature",
@@ -9,6 +11,11 @@ export const emptyLineString = {
         "coordinates": []
     }
 };
+
+export const emptyCollection = {
+    "type": "FeatureCollection",
+    "features": []
+}
 
 export const routeLayerStyle = {
     "id": "route",
@@ -56,6 +63,29 @@ export const busesLayerStyle = {
             0.0,
             MapZoomIconSizeThreshold, 1.0
         ]
+    }
+};
+
+export const routeStopsLayerStyle = {
+    "id": "route_stops",
+    "type": "symbol",
+    "source": "route_stops",
+    "layout": {
+        "icon-allow-overlap": true,
+        "icon-image": "bus_stop",
+        "icon-size": 0.8,
+        "text-optional": true,
+        "text-allow-overlap": false,
+        "text-field": ["get", "stopName"],
+        "text-size": 9,
+        "text-offset": [0, 2],
+    },
+    "paint": {
+        "icon-opacity": ["interpolate", ["linear"], ["zoom"], MapZoomIconSizeThreshold, 0.0, MapZoomStopIconFullOpacity, 1.0],
+        "text-opacity": ["step", ["zoom"], 0.0, MapZoomStopIconShowText, 1.0],
+        "text-halo-color": "#ffffff",
+        "text-halo-width": 1,
+        "text-color": "hsl(215,83%,53%)"
     }
 };
 

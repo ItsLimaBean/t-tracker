@@ -2,12 +2,14 @@
 	import maplibregl from "maplibre-gl";
     import { BusDelayColors } from "../../lib/colors";
     import { formatDelayTime } from "../../lib/map/delay";
-	import { createEventDispatcher, onDestroy, onMount } from "svelte";
+	import { createEventDispatcher, onDestroy } from "svelte";
     import { ShowBusPicture } from "./store";
 
     export let bus;
     export let map;
     export let mapReady;
+
+    let fourOFourBuses = [];
 
     const dispatch = createEventDispatcher();
 
@@ -25,7 +27,6 @@
         newPopup();
     }
 
-
     const getImageUrl = (theBus) => {
         switch (theBus.model.operator) {
             case "CMBC":
@@ -42,29 +43,24 @@
     }
 
     const onImageError = () => {
+        fourOFourBuses.push(bus.id);
         imageState = "error";
     }
 
     const newPopup = () => {
         let isNew = false;
+
+        if (popup) popup.dispatchClose = false;
+
         if (lastBusId !== bus.id) {
             imageState = "spinner";
             isNew = true;
-            
+
             popup?.remove();
 
             popup = new maplibregl.Popup({ offset: [ 0, -18 ] }).setDOMContent(html);
-            popup.dispatchOpen = true;
-
-            popup.on("open", (event) => {
-                if (popup.dispatchOpen) {
-                    dispatch("open");
-                }
-            });
         }
 
-        popup.dispatchOpen = !popup.isOpen();
-        popup.dispatchClose = false;
         popup.remove()
             .setLngLat([ bus.lng, bus.lat ])
             .addTo(map);
@@ -99,7 +95,7 @@
             <small>Next Stop: {bus.nextStop}</small><br>
             <small>Updated: {bus.updated}</small><br>
             <div class="popup-image-wrapper">
-                {#if showBusPicture} 
+                {#if showBusPicture && fourOFourBuses.indexOf(bus.id) === -1} 
                     <img
                         style:display={imageState === "spinner" ? "unset" : "none"}
                         class="popup-image-loader"

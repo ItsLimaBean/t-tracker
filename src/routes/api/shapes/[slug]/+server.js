@@ -42,6 +42,9 @@ export const GET = async ({ params }) => {
                 status: 400,
             });
         }
+
+        console.error(err);
+        return new Response(JSON.stringify({ error: "Internal Server Error" }), { status: 500 });
     }
 
 }

@@ -6,7 +6,7 @@ export class Stop extends BaseModel {
         this.stopId = this.get("stop_id");
         this.stopCode = this.get("stop_code");
         this.stopName = this.get("stop_name");
-        this.pos = [ this.get("stop_lon"), this.get("stop_lat") ]
+        this.pos = [ parseFloat(this.get("stop_lon")), parseFloat(this.get("stop_lat")) ];
         this.registered();
     }
 
