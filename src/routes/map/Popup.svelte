@@ -3,12 +3,16 @@
     import { BusDelayColors } from "../../lib/colors";
     import { formatDelayTime } from "../../lib/map/delay";
 	import { createEventDispatcher, onDestroy, onMount } from "svelte";
+    import { ShowBusPicture } from "./store";
 
     export let bus;
     export let map;
     export let mapReady;
 
     const dispatch = createEventDispatcher();
+
+    let showBusPicture = true;
+    ShowBusPicture.subscribe((value) => showBusPicture = value);
 
     let lastBusId;
     let popup;
@@ -95,18 +99,20 @@
             <small>Next Stop: {bus.nextStop}</small><br>
             <small>Updated: {bus.updated}</small><br>
             <div class="popup-image-wrapper">
-                <img
-                    style:display={imageState === "spinner" ? "unset" : "none"}
-                    class="popup-image-loader"
-                    src="../spinner.svg" alt="Loading spinner"
-                />
-                <img
-                    on:load={onImageLoad}
-                    on:error={onImageError}
-                    style:display={imageState === "loaded"? "unset" : "none"}
-                    class="popup-image"
-                    src={getImageUrl(bus)} alt="A bus"
-                />
+                {#if showBusPicture} 
+                    <img
+                        style:display={imageState === "spinner" ? "unset" : "none"}
+                        class="popup-image-loader"
+                        src="../spinner.svg" alt="Loading spinner"
+                    />
+                    <img
+                        on:load={onImageLoad}
+                        on:error={onImageError}
+                        style:display={imageState === "loaded"? "unset" : "none"}
+                        class="popup-image"
+                        src={getImageUrl(bus)} alt="A bus"
+                    />
+                {/if}
             </div>
         {/if}
 

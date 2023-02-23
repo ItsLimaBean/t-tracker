@@ -2,11 +2,9 @@
 	import Map from "./Map.svelte";
 
 </script>
-<main>
-    <div class="map-container">
-        <Map requestUrl="../api/buses"></Map>
-    </div>
-</main>
+<div class="map-container">
+    <Map requestUrl="../api/buses"></Map>
+</div>
 
 <style>
     :global(body) {

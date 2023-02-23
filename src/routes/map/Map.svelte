@@ -1,10 +1,11 @@
 <script>
     import maplibregl from "maplibre-gl";
-	import { onMount, onDestroy } from "svelte";
+    import { onMount, onDestroy } from "svelte";
     import { PUBLIC_MAPTILER_KEY } from "$env/static/public";
     import { loadImages } from "../../lib/map/images";
     import { emptyLineString, routeLayerStyle, busesLayerStyle, generateBuses } from "../../lib/map/geojson";
-	import Popup from "./Popup.svelte"
+    import Popup from "./Popup.svelte"
+	import Settings from "./Settings.svelte";
 
     export let requestUrl; //../api/buses
 
@@ -71,6 +72,9 @@
     }
 
     onMount(() => {
+        requestBuses();
+        updateInterval = setInterval(requestBuses, 15000);
+        
         map = new maplibregl.Map({
             container: containerElement,
             style: `https://api.maptiler.com/maps/streets-v2/style.json?key=${PUBLIC_MAPTILER_KEY}`,
@@ -115,8 +119,8 @@
             map.addLayer(routeLayerStyle);
             map.addLayer(busesLayerStyle);
 
-            requestBuses();
-            updateInterval = setInterval(requestBuses, 15000);
+            map.addControl(new maplibregl.NavigationControl(), "top-left");
+
             mapReady = true;
         });
     });
@@ -130,6 +134,7 @@
 
 <div class="map" bind:this={containerElement}></div>
 <Popup bus={selectedBus} map={map} mapReady={mapReady} on:close={onPopupClose} on:open={onPopupOpen}></Popup>
+<Settings map={map} mapReady={mapReady} ></Settings>
 
 <style>
     @import "maplibre-gl/dist/maplibre-gl.css";
