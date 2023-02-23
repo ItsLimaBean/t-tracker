@@ -1,5 +1,6 @@
 import { loadGTFS } from "./loader";
 import { BaseModel } from "./models/baseModel";
+import { Route } from "./models/route";
 import { Shape } from "./models/shape";
 import { Stop } from "./models/stop";
 import { StopTime } from "./models/stoptimes";
@@ -11,14 +12,16 @@ class GTFS {
         this.shapes = {};
         this.stopTimes = {};
         this.stops = {};
+        this.routes = {};
     }
 
-    build = async (trips, shapes, stopTimes, stops) => {
-        [this.trips, this.shapes, this.stopTimes, this.stops] = await Promise.all([
+    build = async (trips, shapes, stopTimes, stops, routes) => {
+        [this.trips, this.shapes, this.stopTimes, this.stops, this.routes] = await Promise.all([
             this.buildType(trips.getRows(), trips.getHeaders(), Trip),
             this.buildType(shapes.getRows(), shapes.getHeaders(), Shape),
             this.buildType(stopTimes.getRows(), stopTimes.getHeaders(), StopTime),
             this.buildType(stops.getRows(), stops.getHeaders(), Stop),
+            this.buildType(routes.getRows(), routes.getHeaders(), Route)
         ]);
     }
 

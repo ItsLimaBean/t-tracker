@@ -92,7 +92,7 @@
 <div class="popup-wrapper">
     <div bind:this={html}>
         {#if mapReady === true && bus !== undefined}
-            <span class="route-header">{ bus.route } { bus.dest }</span><br>
+            <span class="route-header"><span class="route-id rounded-pill" style:background-color={ bus.color.color } style:color={ bus.color.text }>{ bus.route }</span> { bus.dest }</span><br>
             {bus.dir} - <span class="route-delay" style:color={"#" + BusDelayColors[bus.icon]}>{ formatDelayTime(bus.delay) }</span><br>
             Vehicle {bus.model.displayId} - <small>{bus.model.operator}</small><br>
             <small>{bus.model.name}</small><br>
@@ -123,6 +123,10 @@
 <style>
     .route-header {
         font-weight: bold;
+    }
+
+    .route-header > .route-id {
+        padding: 0.2rem 0.3rem 0.1rem 0.3rem;
     }
 
     .route-delay {

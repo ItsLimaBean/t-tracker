@@ -34,7 +34,11 @@ export const buildBuses = async (apiBuses) => {
 
             const busPos = [bus.Longitude, bus.Latitude];
             const busTrip = bus.TripId.toString();
-            const busTripShape = gtfs.trips[busTrip].shapeId
+
+            const trip = gtfs.trips[busTrip];
+            const route = gtfs.routes[trip.routeId];
+
+            const busTripShape = trip.shapeId
 
             const shapeTimes = await buildShapeTimes(busTrip);
             const centers = await getCenterPoints(shapeTimes);
@@ -57,7 +61,7 @@ export const buildBuses = async (apiBuses) => {
                 icon: getBusIcon(delay),
                 model: getBusModelInfo(bus.VehicleNo),
                 nextStop: nextStop?.stopName,
-                
+                color: route.routeColor
             });
         } catch (err) {
             console.log("Failed building bus " + bus.VehicleNo)

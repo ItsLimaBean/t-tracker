@@ -58,12 +58,13 @@
     }
 
     const onPopupOpen = async (event) => {
-        await loadShape(selectedBus.shape);
+        await loadShape(selectedBus.shape, selectedBus.color.color);
     }
 
-    const loadShape = async (shapeId) => {
+    const loadShape = async (shapeId, color) => {
         if (!shapeCache[shapeId]) {
             shapeCache[shapeId] = await (await fetch(`../api/shapes/${shapeId}`)).json();
+            shapeCache[shapeId].properties.color = color;
         }
 
         if (shapeId === selectedBus.shape) {

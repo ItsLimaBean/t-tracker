@@ -19,7 +19,7 @@ export const routeLayerStyle = {
         "line-cap": "round",
     },
     "paint": {
-        "line-color": "#3d51aa",
+        "line-color": ["get", "color"],
         "line-width": 4
     }
 };
