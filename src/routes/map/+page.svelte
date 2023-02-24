@@ -3,7 +3,7 @@
 
 </script>
 <div class="map-container">
-    <Map requestUrl="../api/buses"></Map>
+    <Map requestUrl="../api/buses" hash={true}></Map>
 </div>
 
 <style>

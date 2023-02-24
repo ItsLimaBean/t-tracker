@@ -10,6 +10,9 @@ const handleBoolean = (key, defaultValue) => {
 }
 
 export const ShowBusPictureKey = "settings.showBusPicture";
-
 export const ShowBusPicture = writable(browser && handleBoolean(ShowBusPictureKey, true));
 ShowBusPicture.subscribe((value) => browser && localStorage.setItem(ShowBusPictureKey, value));
+
+export const ShowBusStopsOnRouteKey = "settings.showBusStopsOnRoute";
+export const ShowBusStopsOnRoute = writable(browser && handleBoolean(ShowBusStopsOnRouteKey, true));
+ShowBusStopsOnRoute.subscribe((value) => browser && localStorage.setItem(ShowBusStopsOnRouteKey, value));

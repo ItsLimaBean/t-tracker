@@ -106,7 +106,7 @@ export const getBusModelInfo = (busId) => {
 
     for (let vehicles of Fleet) {
         if (displayBusId >= vehicles.start_range && displayBusId <= vehicles.end_range) {
-            return { name: vehicles.name, operator: vehicles.operator, displayId: displayBusId };
+            return { name: vehicles.name, operator: vehicles.operator, displayId: displayBusId.toString() };
         }
     }
 

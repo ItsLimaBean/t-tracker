@@ -4,11 +4,13 @@
     import { PUBLIC_MAPTILER_KEY } from "$env/static/public";
     import { loadImages } from "../../lib/map/images";
     import { emptyLineString, routeLayerStyle, busesLayerStyle, generateBuses, routeStopsLayerStyle, emptyCollection } from "../../lib/map/geojson";
+    import { parseHash } from "../../lib/urlutil";
     import { ShowBusStopsOnRoute } from "./store";
     import Popup from "./Popup.svelte"
     import Settings from "./Settings.svelte";
 
     export let requestUrl; //../api/buses
+    export let hash;
 
     let mapReady = false;
 
@@ -25,10 +27,13 @@
 
     let updateInterval;
 
+    let processedHash = false;
+
     const debug = { zoom: -1 }
 
     $: if (mapReady && buses) {
         updateBuses();
+        processHash();
     }
 
 
@@ -64,9 +69,26 @@
         }
     }
 
-    const findBus = (id) => {
+    const processHash = () => {
+        if (!processedHash) {
+            processedHash = true;
+            const hash = parseHash(window?.location?.hash);
+
+            if (hash["bus"]) {
+                try {
+                    selectBus(hash["bus"], true);
+
+                    map.flyTo({center: [selectedBus.lng, selectedBus.lat], zoom: map.getZoom()})
+                } catch (err) {
+                    console.log(err)
+                }
+            }
+        }
+    }
+
+    const findBus = (id, useDisplay) => {
         for (let bus of buses) {
-            if (bus.id === id) return bus;
+            if (bus.id === id || (useDisplay && bus.model.displayId === id)) return bus;
         }
     }
 
@@ -96,6 +118,12 @@
         }
     }
 
+    const selectBus = (busId, useDisplay) => {
+        const bus = findBus(busId, useDisplay);
+        if (!bus) throw new Error("Could not find bus " + busId);
+        selectedBus = bus;
+    }
+
     onMount(() => {
         requestBuses();
         updateInterval = setInterval(requestBuses, 15000);
@@ -106,7 +134,8 @@
             center: [-122.9656204, 49.2204609],
             zoom: 11,
             maxBounds: [[-123.506427,48.949414],[-122.029941,49.48535]],
-            customAttribution: `Bus images via <a href="https://cptdb.ca/wiki/">CPTDB Wiki</a>`
+            customAttribution: `Bus images via <a href="https://cptdb.ca/wiki/">CPTDB Wiki</a>`,
+            hash: hash !== undefined ? "p" : false
         });
 
         map.on("load", async () => {
@@ -139,9 +168,7 @@
 
             map.on("click", "buses", async (event) => {
                 const properties = event.features[0].properties;
-                const bus = findBus(properties.id);
-                if (!bus) throw new Error("Could not find bus " + bus);
-                selectedBus = bus;
+                selectBus(properties.id, false);
             });
 
             map.on("mouseenter", "buses", () => map.getCanvas().style.cursor = "pointer");
