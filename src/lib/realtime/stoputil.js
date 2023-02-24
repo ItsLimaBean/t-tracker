@@ -1,6 +1,4 @@
-import gtfs from "../gtfs/gtfsSingleton"
-
-export const findNextStopFromShape = async (tripId, shapeId, nextShapeSeq) => {
+export const findNextStopFromShape = async (gtfs, tripId, shapeId, nextShapeSeq) => {
     const stopTimes = gtfs.stopTimes[tripId].times;
     const shape = gtfs.shapes[shapeId].shape;
     for (let i in stopTimes) {

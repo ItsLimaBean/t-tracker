@@ -1,8 +1,8 @@
 import { BaseModel } from "./baseModel";
 
 export class Stop extends BaseModel {
-    constructor(row, headers) {
-        super(row, headers);
+    constructor(row, headers, system) {
+        super(row, headers, system);
         this.stopId = this.get("stop_id");
         this.stopCode = this.get("stop_code");
         this.stopName = this.get("stop_name");

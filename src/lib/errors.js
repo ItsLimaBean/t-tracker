@@ -15,3 +15,9 @@ export class StopTimeNotFoundError extends Error {
         super("No stop time with trip id " + tripId);
     }
 }
+
+export class SystemNotFoundError extends Error {
+    constructor(systemName) {
+        super("No system id " + systemName);
+    }
+}

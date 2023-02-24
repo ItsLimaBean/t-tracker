@@ -7,12 +7,14 @@ class GTFS {
         this.routes = {};
     }
 
-    build = (trips, shapes, stopTimes, stops, routes) => {
-        this.trips = trips;
-        this.shapes = shapes;
-        this.stopTimes = stopTimes;
-        this.stops = stops;
-        this.routes = routes;
+    build = (system, trips, shapes, stopTimes, stops, routes) => {
+        this[system] = {
+            trips, shapes, stopTimes, stops, routes
+        }
+    }
+
+    decode = (encoded) => {
+        return this.feedMessage.decode(encoded);
     }
 
 }

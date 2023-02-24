@@ -3,9 +3,10 @@ import CsvReadableStream from "csv-reader";
 import { BaseModel } from "./models/baseModel";
 
 export class GTFSFile {
-    constructor(nodeStream, type) {
+    constructor(nodeStream, type, systemName) {
         this.nodeStream = nodeStream;
         this.type = type;
+        this.systemName = systemName;
     }
 
     fromCsv = () => {
@@ -26,7 +27,7 @@ export class GTFSFile {
                     }
                 })
                 .on("end", () => {
-                    console.log(`Took ${Date.now() - startTime}ms to load ${this.type.name}.`);
+                    console.log(`[${this.systemName}] Took ${Date.now() - startTime}ms to load ${this.type.name}.`);
                     const parsedType = this.build(rows, headers);
                     resolve(parsedType);
                 });
@@ -36,16 +37,16 @@ export class GTFSFile {
     build = (row, headers) => {
         const startTime = Date.now();
         if (this.type.mapper) {
-            [row, headers] = this.type.mapper(row, headers);
+            [row, headers] = this.type.mapper(row, headers, this.systemName);
         }
 
         let t = {};
         for (let v of row) {
             let index = BaseModel.getColumn(this.type.index(), headers, v);
-            t[index] = new this.type(v, headers);
+            t[index] = new this.type(v, headers, this.systemName);
         }
 
-        console.log(`Took ${Date.now() - startTime}ms to parse ${this.type.name}.`);
+        console.log(`[${this.systemName}] Took ${Date.now() - startTime}ms to parse ${this.type.name}.`);
         return t;
 
     }

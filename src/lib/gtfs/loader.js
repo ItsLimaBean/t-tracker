@@ -6,6 +6,9 @@ import { Trip } from "./models/trip";
 import { StopTime } from "./models/stoptimes";
 import { Stop } from "./models/stop";
 import { Route } from "./models/route";
+import protobuf from "protobufjs";
+
+import fs from "fs";
 
 let initState = 0;
 let statePromise;
@@ -25,8 +28,13 @@ export const unzipGTFS = async (data) => {
     return zipData;
 }
 
-export const downloadGTFS = async () => {
-    const url = "https://tlebtsprd01startti.blob.core.windows.net/gtfs/google_transit.zip";
+export const downloadGTFS = async (systemName) => {
+    const systemUrls = { 
+        "translink": "https://tlebtsprd01startti.blob.core.windows.net/gtfs/google_transit.zip",
+        "bct/cfv": "https://bct.tmix.se/Tmix.Cap.TdExport.WebApi/gtfs/?operatorIds=13"
+    }
+
+    const url = systemUrls[systemName];
 
     let data;
     try {
@@ -39,7 +47,7 @@ export const downloadGTFS = async () => {
         data = response.arrayBuffer();
 
     } catch (err) {
-        console.log(err, "could not download gtfs");
+        console.log(err, "could not download gtfs for system " + systemName);
     }
 
     if (data) {
@@ -47,22 +55,22 @@ export const downloadGTFS = async () => {
     }
 }
 
-export const loadGTFS = async () => {
-    initState = 1;
 
-    console.log("Downloading GTFS data...");
+export const loadSystemGTFS = async (systemName) => {
+    console.log(`[${systemName}] Downloading GTFS data...`);
 
-    const zipObj = await downloadGTFS();
 
-    console.log("Downloaded GTFS data!");
+    const zipObj = await downloadGTFS(systemName);
 
-    console.log("Unpacking GTFS data...");
+    console.log(`[${systemName}] Downloaded GTFS data!`);
 
-    const trips = new GTFSFile(zipObj.files["trips.txt"].nodeStream(), Trip);    
-    const shapes = new GTFSFile(zipObj.files["shapes.txt"].nodeStream(), Shape);
-    const stopTimes = new GTFSFile(zipObj.files["stop_times.txt"].nodeStream(), StopTime);
-    const stops = new GTFSFile(zipObj.files["stops.txt"].nodeStream(), Stop);
-    const routes = new GTFSFile(zipObj.files["routes.txt"].nodeStream(), Route);
+    console.log(`[${systemName}] Unpacking GTFS data...`);
+
+    const trips = new GTFSFile(zipObj.files["trips.txt"].nodeStream(), Trip, systemName);    
+    const shapes = new GTFSFile(zipObj.files["shapes.txt"].nodeStream(), Shape, systemName);
+    const stopTimes = new GTFSFile(zipObj.files["stop_times.txt"].nodeStream(), StopTime, systemName);
+    const stops = new GTFSFile(zipObj.files["stops.txt"].nodeStream(), Stop, systemName);
+    const routes = new GTFSFile(zipObj.files["routes.txt"].nodeStream(), Route, systemName);
 
 
     // The order of this array is important, it needs to match the order of the arguments in the gtfs.build function
@@ -74,10 +82,26 @@ export const loadGTFS = async () => {
         routes.fromCsv()
     ]);
     
-    gtfs.build.apply(gtfs, builtData);
-    console.log("Unpacked GTFS data!");
+    builtData.unshift(systemName);
 
-    console.log("Ready!");
+    gtfs.build.apply(gtfs, builtData);
+    console.log(`[${systemName}] Unpacked GTFS data!`);
+
+    console.log(`[${systemName}] Ready!`);
+}
+
+export const loadGTFS = async () => {
+    initState = 1;
+
+    const currentDir = new URL('.', import.meta.url).pathname;
+    const protoRoot = await protobuf.load(`${currentDir}gtfs-realtime.proto`);
+    
+    gtfs.feedMessage = protoRoot.lookupType("transit_realtime.FeedMessage");
+
+    await Promise.all([
+        loadSystemGTFS("translink"),
+        loadSystemGTFS("bct/cfv")
+    ]);
 
     initState = 2;
 

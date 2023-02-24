@@ -1,11 +1,12 @@
-import { StopTimeNotFoundError, TripNotFoundError } from "../../../../lib/errors";
+import { StopTimeNotFoundError, TripNotFoundError, SystemNotFoundError } from "../../../../lib/errors";
 import gtfs from "../../../../lib/gtfs/gtfsSingleton";
 
-const buildtTripStopsFeature = async (id) => {
-    if (gtfs.trips[id] === undefined) {
+const buildtTripStopsFeature = async (id, system) => {
+    const systemGTFS = gtfs[system];
+    if (systemGTFS.trips[id] === undefined) {
         throw new TripNotFoundError(id);
     }
-    const stopTimes = gtfs.stopTimes[id];
+    const stopTimes = systemGTFS.stopTimes[id];
     if (stopTimes === undefined) {
         throw new StopTimeNotFoundError(id);
     }
@@ -13,7 +14,7 @@ const buildtTripStopsFeature = async (id) => {
     return {
         "type": "FeatureCollection",
         "features": Object.values(stopTimes.times).map((value, i) => {
-            const stop = gtfs.stops[value.stopId];
+            const stop = systemGTFS.stops[value.stopId];
             return {
                 "type": "Feature",
                 "properties": {
@@ -29,9 +30,12 @@ const buildtTripStopsFeature = async (id) => {
 }
 
 
-export const GET = async ({ params }) => {
+export const GET = async ({ params, url }) => {
     try {
-        const tripStopFeatures = await buildtTripStopsFeature(params.slug);
+        const system = url.searchParams.get("sys");
+        if (!gtfs[system]) throw new SystemNotFoundError(system);
+
+        const tripStopFeatures = await buildtTripStopsFeature(params.slug, system);
 
         return new Response(JSON.stringify(tripStopFeatures), {
             headers: {
@@ -39,7 +43,7 @@ export const GET = async ({ params }) => {
             }
         });
     } catch (err) {
-        if (err instanceof TripNotFoundError || err instanceof StopTimeNotFoundError) {
+        if (err instanceof TripNotFoundError || err instanceof StopTimeNotFoundError || err instanceof SystemNotFoundError) {
             return new Response(JSON.stringify({ error: err.message }), {
                 status: 400,
             });

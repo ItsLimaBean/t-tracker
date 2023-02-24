@@ -37,16 +37,16 @@
     }
 
 
-    $: if (selectedBus) {
-        loadShape(selectedBus.shape, selectedBus.color.color);
+    $: if (selectedBus && selectedBus.trip) {
+        loadShape(selectedBus.shape, selectedBus.system, selectedBus.color.color);
         if ($ShowBusStopsOnRoute) {
-            loadStops(selectedBus.trip);
+            loadStops(selectedBus.trip, selectedBus.system);
         } else {
             map.getSource("route_stops").setData(emptyCollection);
         }
     }
 
-    $: if (!selectedBus && mapReady) {
+    $: if ((!selectedBus || !selectedBus.trip) && mapReady) {
         map.getSource("route").setData(emptyLineString);
         map.getSource("route_stops").setData(emptyCollection);
     }
@@ -97,9 +97,10 @@
             selectedBus = undefined;
         }
     }
-    const loadShape = async (shapeId, color) => {
+    const loadShape = async (shapeId, system, color) => {
         if (!shapeCache[shapeId]) {
-            shapeCache[shapeId] = await (await fetch(`../api/shapes/${shapeId}`)).json();
+            shapeCache[shapeId] = await (await fetch(`../api/shapes/${shapeId}?sys=${system}`)).json();
+            console.log(shapeCache[shapeId].properties.color = color)
             shapeCache[shapeId].properties.color = color;
         }
 
@@ -108,9 +109,9 @@
         }
     }
 
-    const loadStops = async (tripId) => {
+    const loadStops = async (tripId, system) => {
         if (!stopsCache[tripId]) {
-            stopsCache[tripId] = await (await fetch(`../api/stops/${tripId}`)).json();
+            stopsCache[tripId] = await (await fetch(`../api/stops/${tripId}?sys=${system}`)).json();
         }
 
         if (tripId === selectedBus.trip) {
@@ -133,7 +134,7 @@
             style: `https://api.maptiler.com/maps/streets-v2/style.json?key=${PUBLIC_MAPTILER_KEY}`,
             center: [-122.9656204, 49.2204609],
             zoom: 11,
-            maxBounds: [[-123.506427,48.949414],[-122.029941,49.48535]],
+            maxBounds: [[-123.506427,48.949414],[-121.7,49.48535]],
             customAttribution: `Bus images via <a href="https://cptdb.ca/wiki/">CPTDB Wiki</a>`,
             hash: hash !== undefined ? "p" : false
         });

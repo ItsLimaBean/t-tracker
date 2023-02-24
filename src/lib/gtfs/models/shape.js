@@ -1,8 +1,9 @@
+import { normalizeDistance } from "../../timeutil";
 import { BaseModel } from "./baseModel";
 
 export class Shape extends BaseModel {
-    constructor(row, headers) {
-        super(row, headers);
+    constructor(row, headers, system) {
+        super(row, headers, system);
         this.shapeId = this.get("shape_id");
         this.shape = this.get("shape");
         this.registered();
@@ -12,7 +13,7 @@ export class Shape extends BaseModel {
         return "shape_id";
     }
 
-    static mapper = (rows, headers) => {
+    static mapper = (rows, headers, system) => {
         const newRows = [];
         const newHeaders = headers;
         const filteredRows = {};
@@ -39,7 +40,7 @@ export class Shape extends BaseModel {
                     let seq = BaseModel.getColumn("shape_pt_sequence", headers, pos);
                     let lng = BaseModel.getColumn("shape_pt_lon", headers, pos);
                     let lat = BaseModel.getColumn("shape_pt_lat", headers, pos);
-                    let dist = parseFloat(BaseModel.getColumn("shape_dist_traveled", headers, pos)) || 0;
+                    let dist = normalizeDistance(system, BaseModel.getColumn("shape_dist_traveled", headers, pos)) || 0;
 
                     positions[seq] = {pos: [parseFloat(lng), parseFloat(lat)], distance: dist };
                     

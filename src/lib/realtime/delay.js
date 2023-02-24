@@ -1,6 +1,5 @@
-import gtfs from "../gtfs/gtfsSingleton"
 import { calcCrow, getLngLatCenter } from "../maputil";
-import { getDateStr, getTimestamp } from "../timeutil";
+import { getTimestamp } from "../timeutil";
 
 // The minimum spacing between two shape points in KM
 // to be included in shape time interpolation.
@@ -9,7 +8,7 @@ import { getDateStr, getTimestamp } from "../timeutil";
 //       prediction to be wilding skewed.
 const MinShapeSpacing = 0.025; // 25 meters
 
-export const buildShapeTimes = async (tripId) => {
+export const buildShapeTimes = async (gtfs, tripId) => {
     const shapeId = gtfs.trips[tripId].shapeId;
 
     const shape = gtfs.shapes[shapeId].shape;

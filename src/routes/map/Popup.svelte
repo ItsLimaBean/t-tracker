@@ -33,8 +33,10 @@
                 return `https://cptdb.ca/wiki/thumb.php?f=Coast_Mountain_Bus_Company_${theBus.model.displayId}-a.jpg&w=200`;
             case "Blue Bus":
                 return `https://cptdb.ca/wiki/thumb.php?f=West_Vancouver_Municipal_Transit_${theBus.model.displayId}-a.jpg&w=200`;
-            default: 
-                throw new Error("invalid operator");
+            case "BC Transit":
+                return `https://cptdb.ca/wiki/thumb.php?f=BC_TRANSIT_${theBus.model.displayId}-a.jpg&w=200`
+            default:
+                return "";
         }
     }
 
@@ -89,10 +91,10 @@
     <div bind:this={html}>
         {#if mapReady === true && bus !== undefined}
             <span class="route-header"><span class="route-id rounded-pill" style:background-color={ bus.color.color } style:color={ bus.color.text }>{ bus.route }</span> { bus.dest }</span><br>
-            {bus.dir} - <span class="route-delay" style:color={"#" + BusDelayColors[bus.icon]}>{ formatDelayTime(bus.delay) }</span><br>
+            {#if bus.dir}{bus.dir} - {/if}{#if bus.trip }<span class="route-delay" style:color={ BusDelayColors[bus.icon]}>{ formatDelayTime(bus.delay) }</span><br>{/if}
             Vehicle {bus.model.displayId} - <small>{bus.model.operator}</small><br>
             <small>{bus.model.name}</small><br>
-            <small>Next Stop: {bus.nextStop}</small><br>
+            {#if bus.nextStop}<small>Next Stop: {bus.nextStop}</small><br>{/if}
             <small>Updated: {bus.updated}</small><br>
             <div class="popup-image-wrapper">
                 {#if showBusPicture && fourOFourBuses.indexOf(bus.id) === -1} 

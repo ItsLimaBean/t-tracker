@@ -28,6 +28,7 @@
 		"csv-reader": "^1.0.11",
 		"dateformat": "^5.0.3",
 		"jszip": "^3.10.1",
-		"maplibre-gl": "^2.4.0"
+		"maplibre-gl": "^2.4.0",
+		"protobufjs": "^7.2.2"
 	}
 }

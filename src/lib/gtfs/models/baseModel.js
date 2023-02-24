@@ -1,8 +1,9 @@
 export class BaseModel {
 
-    constructor(row, headers) {
+    constructor(row, headers, system) {
         this.headers = headers;
         this.row = row;
+        this.system = system;
     }
 
     get = (name) => {

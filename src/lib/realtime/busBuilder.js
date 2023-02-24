@@ -2,6 +2,7 @@ import gtfs from "../gtfs/gtfsSingleton";
 import { caclulateDelay, buildShapeTimes, getCenterPoints, findCurrentStop } from "./delay";
 import { getBusModelInfo } from "../gtfs/fleet";
 import { findNextStopFromShape } from "./stoputil";
+import { DefaultColor } from "../colors";
 
 export const getBusIcon = (delay) => {
     if (delay === null || delay === undefined) {
@@ -23,48 +24,61 @@ const Directions = {
     "SOUTH": "Southbound",
     "WEST": "Westbound"
 }
-
+/*
+            id: vehicleId,
+            route: trip?.tripUpdate.trip.routeId.replace("-CFV", ""),
+            trip: trip.trip.tripId,
+            dest: "TODO- LATER",//trip.trip.tripHeadsign,
+            dir: "EAST",//trip.trip.directionId,
+            lat: vehicle.position.latitude,
+            lng: vehicle.position.longitude,
+            updated: getTimeFormat(vehicle.timestamp),
+            system: "bct/cfv"
+*/
 export const buildBuses = async (apiBuses) => {
     let buses = [];
-    let first = 0;
     for (const bus of apiBuses) {
-        
         try {
+            const busPos = [bus.lng, bus.lat];
+            const busTrip = bus.trip?.toString();
 
+            const systemGTFS = gtfs[bus.system];
 
-            const busPos = [bus.Longitude, bus.Latitude];
-            const busTrip = bus.TripId.toString();
-
-            const trip = gtfs.trips[busTrip];
-            const route = gtfs.routes[trip.routeId];
-
-            const busTripShape = trip.shapeId
-
-            const shapeTimes = await buildShapeTimes(busTrip);
-            const centers = await getCenterPoints(shapeTimes);
+            let route, delay, nextStop, busTripShape;
+            if (busTrip) {
+                const trip = systemGTFS.trips[busTrip];
+                route = systemGTFS.routes[trip.routeId];
+    
+                busTripShape = trip.shapeId
+    
+                const shapeTimes = await buildShapeTimes(systemGTFS, busTrip);
+                const centers = await getCenterPoints(shapeTimes);
+                
+                const closestSeq = await findCurrentStop(busPos, centers);
+                delay = await caclulateDelay(closestSeq);
+                nextStop = await findNextStopFromShape(systemGTFS, busTrip, busTripShape, closestSeq.nextShape.shapeSeq);
+            }
             
-            const closestSeq = await findCurrentStop(busPos, centers);
-            const delay = await caclulateDelay(closestSeq);
-            const nextStop = await findNextStopFromShape(busTrip, busTripShape, closestSeq.nextShape.shapeSeq);
 
             buses.push({
-                dest: bus.Destination,
-                dir: Directions[bus.Direction],
-                lat: bus.Latitude,
-                lng: bus.Longitude,
+                dest: bus.dest,
+                dir: Directions[bus.dir],
+                lat: bus.lat,
+                lng: bus.lng,
                 trip: busTrip,
-                updated: bus.RecordedTime,
-                id: bus.VehicleNo,
-                route: bus.RouteNo,
+                updated: bus.updated,
+                id: bus.id,
+                route: bus.route,
                 shape: busTripShape,
                 delay: delay,
                 icon: getBusIcon(delay),
-                model: getBusModelInfo(bus.VehicleNo),
+                model: getBusModelInfo(bus.id, bus.system),
                 nextStop: nextStop?.stopName,
-                color: route.routeColor
+                color: route?.routeColor || DefaultColor[bus.system],
+                system: bus.system
             });
         } catch (err) {
-            console.log("Failed building bus " + bus.VehicleNo)
+            console.log("Failed building bus " + bus.id)
             console.error(err);
         }     
 

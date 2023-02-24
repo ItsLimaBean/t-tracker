@@ -1,12 +1,14 @@
-import { ShapeNotFoundError } from "../../../../lib/errors";
+import { ShapeNotFoundError, SystemNotFoundError } from "../../../../lib/errors";
 import gtfs from "../../../../lib/gtfs/gtfsSingleton";
 
-const buildShapeFeature = async (id) => {
-    if (gtfs.shapes[id] === undefined) {
+const buildShapeFeature = async (id, system) => {
+    const systemGTFS = gtfs[system];
+
+    if (systemGTFS.shapes[id] === undefined) {
         throw new ShapeNotFoundError(id);
     }
 
-    const shape = gtfs.shapes[id].shape;
+    const shape = systemGTFS.shapes[id].shape;
 
     
     const coordinates = [];
@@ -27,9 +29,13 @@ const buildShapeFeature = async (id) => {
 }
 
 
-export const GET = async ({ params }) => {
+export const GET = async ({ params, url }) => {
     try {
-        const shapeFeatures = await buildShapeFeature(params.slug);
+        const system = url.searchParams.get("sys");
+        if (!gtfs[system]) throw new SystemNotFoundError(system);
+
+
+        const shapeFeatures = await buildShapeFeature(params.slug, system);
 
         return new Response(JSON.stringify(shapeFeatures), {
             headers: {
@@ -37,7 +43,7 @@ export const GET = async ({ params }) => {
             }
         });
     } catch (err) {
-        if (err instanceof ShapeNotFoundError) {
+        if (err instanceof ShapeNotFoundError || err instanceof SystemNotFoundError) {
             return new Response(JSON.stringify({ error: err.message }), {
                 status: 400,
             });
