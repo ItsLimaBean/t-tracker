@@ -64,15 +64,17 @@ export const loadGTFS = async () => {
     const stops = new GTFSFile(zipObj.files["stops.txt"].nodeStream(), Stop);
     const routes = new GTFSFile(zipObj.files["routes.txt"].nodeStream(), Route);
 
-    await Promise.all([
+
+    // The order of this array is important, it needs to match the order of the arguments in the gtfs.build function
+    const builtData = await Promise.all([
         trips.fromCsv(),
         shapes.fromCsv(),
         stopTimes.fromCsv(),
         stops.fromCsv(),
         routes.fromCsv()
-    ])
+    ]);
     
-    await gtfs.build(trips, shapes, stopTimes, stops, routes);
+    gtfs.build.apply(gtfs, builtData);
     console.log("Unpacked GTFS data!");
 
     console.log("Ready!");

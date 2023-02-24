@@ -1,43 +1,53 @@
 import AutoDetectDecoderStream from "autodetect-decoder-stream";
 import CsvReadableStream from "csv-reader";
+import { BaseModel } from "./models/baseModel";
 
 export class GTFSFile {
-    
     constructor(nodeStream, type) {
         this.nodeStream = nodeStream;
-        this.headers = [];
-        this.rows = [];
-        this.name = type.name;
+        this.type = type;
     }
 
     fromCsv = () => {
         return new Promise((resolve, reject) => {
-            const startTime = Date.now();
+            const startTime = new Date();
+
+            let headers = [];
+            const rows = [];
+
             this.nodeStream
                 .pipe(new AutoDetectDecoderStream({ defaultEncoding: "1255" }))
                 .pipe(new CsvReadableStream({ parseNumbers: false, parseBooleans: true, trim: true }))
                 .on("data", async (row) => {
-                    if (this.headers.length == 0) {
-                        this.headers = row;
+                    if (headers.length == 0) {
+                        headers = row;
                     } else {
-                        this.rows.push(row);
+                        rows.push(row);
                     }
                 })
                 .on("end", () => {
-                    console.log(`Took ${Date.now() - startTime}ms to load ${this.name}.`);
-                    resolve();
-                })
-                .on("error", (err) => {
-                    reject(err);
+                    console.log(`Took ${Date.now() - startTime}ms to load ${this.type.name}.`);
+                    const parsedType = this.build(rows, headers);
+                    resolve(parsedType);
                 });
         });
     }
 
-    getRows = () => {
-        return this.rows;
+    build = (row, headers) => {
+        const startTime = Date.now();
+        if (this.type.mapper) {
+            [row, headers] = this.type.mapper(row, headers);
+        }
+
+        let t = {};
+        for (let v of row) {
+            let index = BaseModel.getColumn(this.type.index(), headers, v);
+            t[index] = new this.type(v, headers);
+        }
+
+        console.log(`Took ${Date.now() - startTime}ms to parse ${this.type.name}.`);
+        return t;
+
     }
 
-    getHeaders = () => {
-        return this.headers;
-    }
 }
