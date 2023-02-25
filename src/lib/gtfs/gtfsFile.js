@@ -1,12 +1,12 @@
 import AutoDetectDecoderStream from "autodetect-decoder-stream";
 import CsvReadableStream from "csv-reader";
-import { BaseModel } from "./models/baseModel";
 
 export class GTFSFile {
-    constructor(nodeStream, type, systemName) {
+    constructor(nodeStream, type, systemName, calendarId) {
         this.nodeStream = nodeStream;
-        this.type = type;
+        this.type = type || { name: "unknown" };
         this.systemName = systemName;
+        this.calendarId = calendarId;
     }
 
     fromCsv = () => {
@@ -26,29 +26,11 @@ export class GTFSFile {
                         rows.push(row);
                     }
                 })
-                .on("end", () => {
-                    console.log(`[${this.systemName}] Took ${Date.now() - startTime}ms to load ${this.type.name}.`);
-                    const parsedType = this.build(rows, headers);
-                    resolve(parsedType);
+                .on("end", async () => {
+                    console.log(`[${this.systemName}] Took ${Date.now() - startTime}ms to insert ${this.type.name} into database.`);
+                    await this.type.addData(rows, headers, this.systemName, this.calendarId);
+                    resolve();
                 });
         });
     }
-
-    build = (row, headers) => {
-        const startTime = Date.now();
-        if (this.type.mapper) {
-            [row, headers] = this.type.mapper(row, headers, this.systemName);
-        }
-
-        let t = {};
-        for (let v of row) {
-            let index = BaseModel.getColumn(this.type.index(), headers, v);
-            t[index] = new this.type(v, headers, this.systemName);
-        }
-
-        console.log(`[${this.systemName}] Took ${Date.now() - startTime}ms to parse ${this.type.name}.`);
-        return t;
-
-    }
-
 }

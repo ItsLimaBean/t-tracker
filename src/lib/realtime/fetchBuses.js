@@ -18,17 +18,7 @@ const formatTranslink = async (data) => {
     });
 };
 
-const formatBCTCFV = async (trips, positions) => {
-    const tripData = trips.entity.reduce((acc, entity) => {
-        if (!entity.tripUpdate.vehicle) {
-            return acc;
-        }
-        const vehicleId = entity.tripUpdate.vehicle.id.slice(-4);
-
-        acc[vehicleId] = entity.tripUpdate;
-        return acc;
-    }, []);
-
+const formatBCTCFV = async (positions) => {
     const positionData = positions.entity.reduce((acc, entity) => {
         if (!entity.vehicle) {
             return acc;
@@ -45,31 +35,40 @@ const formatBCTCFV = async (trips, positions) => {
 
         if (!vehicle.position) { continue; }
 
-        const trip = tripData[vehicleId];
+        const trip = vehicle.trip;
         
         let tripId;
-        let route = "NIS";
-        let dest = "NOT IN SERVICE";
-        if (trip !== undefined && trip.trip !== undefined) {
-            tripId = trip.trip.tripId;
-            route = trip.trip.routeId.replace("-CFV", "");
-            try {
+        let route = "UNK";
+        let dest = "Unknown";
+
+        if (trip) {
+            tripId = trip.tripId;
+            if (gtfs["bct/cfv"].trips[tripId]) {
+                route = trip.routeId.replace("-CFV", "");
                 route = parseInt(route).toString().padStart(3, "0");
-            } catch (e) {
+    
+                dest = gtfs["bct/cfv"].trips[tripId].tripHeadsign;
             }
-            dest = gtfs["bct/cfv"].trips[tripId].tripHeadsign;
+            
+            route = trip.routeId.replace("-CFV", "");
+
+            dest = gtfs["bct/cfv"].routes[trip.routeId].routeName;
+        } else {
+            dest = "NOT IN SERVICE"
+            route = "NIS";
         }
 
         const bus = {
             id: vehicleId,
             route: route,
             trip: tripId,
-            dest: dest,//trip.trip.tripHeadsign,
-            dir: undefined,//trip.trip.directionId,
+            dest: dest,
+            dir: undefined,
             lat: vehicle.position.latitude,
             lng: vehicle.position.longitude,
             updated: getTimeFormat(vehicle.timestamp),
-            system: "bct/cfv"
+            system: "bct/cfv",
+            stopSeq: vehicle.currentStopSequence.toString(),
         };
 
         buses.push(bus);
@@ -107,22 +106,15 @@ const fetchTranslinkBuses = async () => {
 const fetchBCTCFVBuses = async () => {
     try {
 
-        const [tripsData, positionsData] = await Promise.all([
-            fetch(`https://bct.tmix.se/gtfs-realtime/tripupdates.pb?operatorIds=13`, {
-                headers: {
-                    "content-type": "application/octet-stream"
-                }
-            }),
-            fetch(`https://bct.tmix.se/gtfs-realtime/vehiclepositions.pb?operatorIds=13`, {
-                headers: {
-                    "content-type": "application/octet-stream"
-                }
-            })
-        ]);
-        const trips = gtfs.decode(new Uint8Array(await tripsData.arrayBuffer()));
-        const positions = gtfs.decode(new Uint8Array(await positionsData.arrayBuffer()));
+        const fetchData = await fetch(`https://bct.tmix.se/gtfs-realtime/vehiclepositions.pb?operatorIds=13`, {
+            headers: {
+                "content-type": "application/octet-stream"
+            }
+        });
+
+        const positions = gtfs.decode(new Uint8Array(await fetchData.arrayBuffer()));
         
-        return await formatBCTCFV(trips, positions);
+        return await formatBCTCFV(positions);
     } catch (err) {
         console.error(err);
     
@@ -137,6 +129,10 @@ export const fetchBuses = async () => {
 
     //console.log(bctcfv);
 
-    return translink.concat(bctcfv);
-    
+    // This is not a good solution but it works for now
+    if (!bctcfv) {
+        return translink;
+    } else {
+        return translink.concat(bctcfv);
+    }
 }

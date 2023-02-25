@@ -27,6 +27,13 @@ export const getTimeFormat = (time) => {
 }
 
 export const normalizeDistance = (system, distance) => {
+    if (distance === undefined || distance === null || distance === "") return 0.0;
     distance = parseFloat(distance);
     return system !== "translink" ? distance / 1000 : distance;
 };
+
+export const getNumberDate = () => {
+    const date = new Date();
+    const dateStr = dateFormat(date, "yyyymmdd");
+    return parseInt(dateStr);
+} 

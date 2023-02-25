@@ -8,6 +8,10 @@ import { Stop } from "./models/stop";
 import { Route } from "./models/route";
 import protobuf from "protobufjs";
 
+import { database } from "../database/singleton";
+import { Calendar } from "./models/calendar";
+import { getNumberDate } from "../timeutil";
+
 import fs from "fs";
 
 let initState = 0;
@@ -56,42 +60,70 @@ export const downloadGTFS = async (systemName) => {
 }
 
 
+const gtfsFilesToLoad = [
+    { file: "trips", type: Trip },
+    { file: "shapes", type: Shape },
+    { file: "stop_times", type: StopTime },
+    { file: "stops", type: Stop },
+    { file: "routes", type: Route }
+];
+
 export const loadSystemGTFS = async (systemName) => {
-    console.log(`[${systemName}] Downloading GTFS data...`);
+
+    const currentDate = getNumberDate();
+
+    let zipObj;    
+    let serviceDates = await Calendar.selectCurrentCalendar(systemName, currentDate);
+    let calendarId = serviceDates?.[0]?.id;
+    if (serviceDates.length === 0) {
+        console.log(`[${systemName}] No service dates found in database, downloading GTFS data...`);
+        
+        zipObj = await downloadGTFS(systemName);
+
+        console.log(`[${systemName}] Downloaded GTFS data!`);
+
+        const calendar = new GTFSFile(zipObj.files["calendar.txt"].nodeStream(), Calendar, systemName);
+        await calendar.fromCsv();
+
+        serviceDates = await Calendar.selectCurrentCalendar(systemName, currentDate);
+        if (serviceDates.length === 0) {
+            console.log(`[${systemName}] No usable server dates, skipping...`);
+            return;
+        }
+        calendarId = serviceDates[0].id;
+
+        for (const gtfsEntry of gtfsFilesToLoad) {
+            const gtfsFile = new GTFSFile(zipObj.files[gtfsEntry.file + ".txt"].nodeStream(), gtfsEntry.type, systemName, calendarId);
+            await gtfsFile.fromCsv();
+        }
+    }
 
 
-    const zipObj = await downloadGTFS(systemName);
+    const buildData = await Promise.all(gtfsFilesToLoad.map(async (gtfsEntry) => {
+        const time = new Date();
 
-    console.log(`[${systemName}] Downloaded GTFS data!`);
+        const output = {};
+        const allData = await gtfsEntry.type.getAllData(calendarId)
+        for (const data of allData) {
+            const obj = new gtfsEntry.type(data, systemName)
+            output[data[gtfsEntry.type.index()]] = obj;
+        }
+        
+        console.log(`[${systemName}] Loaded ${gtfsEntry.file} in ${new Date() - time}ms`);
+        return output;
+    }));
 
-    console.log(`[${systemName}] Unpacking GTFS data...`);
+    buildData.unshift(systemName);
+    gtfs.build.apply(gtfs, buildData);
 
-    const trips = new GTFSFile(zipObj.files["trips.txt"].nodeStream(), Trip, systemName);    
-    const shapes = new GTFSFile(zipObj.files["shapes.txt"].nodeStream(), Shape, systemName);
-    const stopTimes = new GTFSFile(zipObj.files["stop_times.txt"].nodeStream(), StopTime, systemName);
-    const stops = new GTFSFile(zipObj.files["stops.txt"].nodeStream(), Stop, systemName);
-    const routes = new GTFSFile(zipObj.files["routes.txt"].nodeStream(), Route, systemName);
-
-
-    // The order of this array is important, it needs to match the order of the arguments in the gtfs.build function
-    const builtData = await Promise.all([
-        trips.fromCsv(),
-        shapes.fromCsv(),
-        stopTimes.fromCsv(),
-        stops.fromCsv(),
-        routes.fromCsv()
-    ]);
-    
-    builtData.unshift(systemName);
-
-    gtfs.build.apply(gtfs, builtData);
-    console.log(`[${systemName}] Unpacked GTFS data!`);
-
-    console.log(`[${systemName}] Ready!`);
+    console.log(`[${systemName}] Finished loading GTFS data!`);
 }
 
 export const loadGTFS = async () => {
     initState = 1;
+
+    database.init();
+
 
     const currentDir = new URL('.', import.meta.url).pathname;
     const protoRoot = await protobuf.load(`${currentDir}gtfs-realtime.proto`);

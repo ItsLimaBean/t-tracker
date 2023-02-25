@@ -1,12 +1,12 @@
 import { BaseModel } from "./baseModel";
 
 export class Trip extends BaseModel {
-    constructor(row, headers, system) {
-        super(row, headers, system);
-        this.routeId = this.get("route_id");
-        this.tripId = this.get("trip_id");
-        this.shapeId = this.get("shape_id");
-        this.tripHeadsign = this.get("trip_headsign");
+    constructor(data, system) {
+        super(system);
+        this.routeId = data["route_id"];
+        this.tripId = data["trip_id"];
+        this.shapeId = data["shape_id"];
+        this.tripHeadsign = data["trip_headsign"];
         this.registered();
     }
 
@@ -14,4 +14,30 @@ export class Trip extends BaseModel {
         return "trip_id";
     }
 
+
+    static addData = async (rows, headers, system, calendarId) => {
+        const insert = await BaseModel.insertTransaction("trips", ["calendar_id", "route_id", "trip_id", "shape_id", "trip_headsign", "service_id"]);
+        insert(rows.map(row => {
+            return [
+                calendarId,
+                BaseModel.getColumn("route_id", headers, row),
+                BaseModel.getColumn("trip_id", headers, row),
+                BaseModel.getColumn("shape_id", headers, row),
+                BaseModel.getColumn("trip_headsign", headers, row),
+                BaseModel.getColumn("service_id", headers, row)
+            ]
+        }));
+    }
+
+    static getAllData = async (calendarId) => {
+        const time = new Date();
+        
+        return await BaseModel.selectBasic("trips", [
+            "route_id",
+            "trip_id",
+            "shape_id",
+            "trip_headsign",
+            "service_id"
+        ], ["calendar_id = ?"], calendarId);
+    }
 }

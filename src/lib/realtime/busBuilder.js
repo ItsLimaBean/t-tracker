@@ -5,7 +5,7 @@ import { findNextStopFromShape } from "./stoputil";
 import { DefaultColor } from "../colors";
 
 export const getBusIcon = (delay) => {
-    if (delay === null || delay === undefined) {
+    if (typeof delay !== "number" || Math.abs(delay) === Infinity) {
         return "unk";
     } else if (delay > 60.0) {
         return "early";
@@ -45,20 +45,24 @@ export const buildBuses = async (apiBuses) => {
             const systemGTFS = gtfs[bus.system];
 
             let route, delay, nextStop, busTripShape;
+
             if (busTrip) {
                 const trip = systemGTFS.trips[busTrip];
-                route = systemGTFS.routes[trip.routeId];
+                if (trip) {
+                    route = systemGTFS.routes[trip.routeId];
     
-                busTripShape = trip.shapeId
+                    busTripShape = trip.shapeId
+        
+                    const shapeTimes = await buildShapeTimes(systemGTFS, busTrip);
+                    
+                    const centers = await getCenterPoints(shapeTimes);
+                    
+                    const closestSeq = await findCurrentStop(busPos, centers);
     
-                const shapeTimes = await buildShapeTimes(systemGTFS, busTrip);
-                const centers = await getCenterPoints(shapeTimes);
-                
-                const closestSeq = await findCurrentStop(busPos, centers);
-                delay = await caclulateDelay(closestSeq);
-                nextStop = await findNextStopFromShape(systemGTFS, busTrip, busTripShape, closestSeq.nextShape.shapeSeq);
+                    delay = await caclulateDelay(closestSeq);
+                    nextStop = await findNextStopFromShape(systemGTFS, busTrip, busTripShape, closestSeq.nextShape.shapeSeq);
+                }
             }
-            
 
             buses.push({
                 dest: bus.dest,
@@ -67,7 +71,7 @@ export const buildBuses = async (apiBuses) => {
                 lng: bus.lng,
                 trip: busTrip,
                 updated: bus.updated,
-                id: bus.id,
+                id: `${bus.system[0]}_${bus.id}`,
                 route: bus.route,
                 shape: busTripShape,
                 delay: delay,
@@ -78,7 +82,7 @@ export const buildBuses = async (apiBuses) => {
                 system: bus.system
             });
         } catch (err) {
-            console.log("Failed building bus " + bus.id)
+            console.log("Failed building bus " + bus?.id)
             console.error(err);
         }     
 

@@ -1,11 +1,12 @@
 import { normalizeDistance } from "../../timeutil";
 import { BaseModel } from "./baseModel";
+import { database } from "../../database/singleton";
 
 export class StopTime extends BaseModel {
-    constructor(row, headers, system) {
-        super(row, headers, system);
-        this.tripId = this.get("trip_id");
-        this.times = this.get("times");
+    constructor(data, system) {
+        super(system);
+        this.tripId = data["trip_id"];
+        this.times = JSON.parse(data["times"]);
         this.registered();
     }
 
@@ -13,43 +14,43 @@ export class StopTime extends BaseModel {
         return "trip_id";
     }
 
-    static mapper = (rows, headers, system) => {
-        const newRows = [];
-        const newHeaders = headers;
-        const filteredRows = {};
+    static addData = async (rows, headers, system, calendarId) => {
+        const insert = await BaseModel.insertTransaction("stop_times", ["calendar_id", "trip_id", "arrival_time", "departure_time", "stop_id", "stop_sequence", "shape_dist_traveled"]);
+        
+        insert(rows.map(row => {
+            return [
+                calendarId,
+                BaseModel.getColumn("trip_id", headers, row),
+                BaseModel.getColumn("arrival_time", headers, row),
+                BaseModel.getColumn("departure_time", headers, row),
+                BaseModel.getColumn("stop_id", headers, row),
+                BaseModel.getColumn("stop_sequence", headers, row),
+                normalizeDistance(system, BaseModel.getColumn("shape_dist_traveled", headers, row))
+            ]
+        }));
+    }
 
-        newHeaders.push("times");
+    static getAllData = async (calendarId) => {
+        const db = database.get();
 
-        for (let row of rows) {
-            const tripId = BaseModel.getColumn("trip_id", headers, row);
-            if (!filteredRows[tripId])
-                filteredRows[tripId] = { parsed: false, rows: [] }
-
-            filteredRows[tripId].rows.push(row);
-        }
-
-        for (let row of rows) {
-            const tripId = BaseModel.getColumn("trip_id", headers, row);
-            
-            if (!filteredRows[tripId].parsed) {
-                filteredRows[tripId].parsed = true;
-                
-                const stopTimes = filteredRows[tripId].rows;
-                const filtered = {};
-                for (let pos of stopTimes) {
-                    let seq = BaseModel.getColumn("stop_sequence", headers, pos);
-                    let departure = BaseModel.getColumn("departure_time", headers, pos);
-                    let stopId = BaseModel.getColumn("stop_id", headers, pos);
-                    let distance = normalizeDistance(system, BaseModel.getColumn("shape_dist_traveled", headers, pos)) || 0.0
-
-                    filtered[seq] = {departure, stopId, distance}
-                    
-                }
-                row.push(filtered);
-                newRows.push(row);
-            }
-        }
-
-        return [newRows, newHeaders];
+        return db.prepare(`
+            SELECT
+            trip_id,
+            json_group_object(stop_sequence,
+                json_object(
+                        'departure', departure_time,
+                        'stopId', stop_id,
+                        'distance', shape_dist_traveled
+                )) as times
+            FROM (
+                SELECT trip_id, departure_time, stop_id, shape_dist_traveled, stop_sequence 
+                FROM stop_times 
+                WHERE calendar_id = ?
+                ORDER BY
+                    stop_sequence ASC,
+                    trip_id ASC
+            )
+            GROUP BY trip_id
+        `).all(calendarId);
     }
 }

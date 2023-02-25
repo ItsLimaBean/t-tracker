@@ -1,11 +1,12 @@
+import { database } from "../../database/singleton";
 import { normalizeDistance } from "../../timeutil";
 import { BaseModel } from "./baseModel";
 
 export class Shape extends BaseModel {
-    constructor(row, headers, system) {
-        super(row, headers, system);
-        this.shapeId = this.get("shape_id");
-        this.shape = this.get("shape");
+    constructor(data, system) {
+        super(system);
+        this.shapeId = data["shape_id"];
+        this.shape = JSON.parse(data["shape"]);
         this.registered();
     }
 
@@ -13,43 +14,42 @@ export class Shape extends BaseModel {
         return "shape_id";
     }
 
-    static mapper = (rows, headers, system) => {
-        const newRows = [];
-        const newHeaders = headers;
-        const filteredRows = {};
+    static addData = async (rows, headers, system, calendarId) => {
+        const insert = await BaseModel.insertTransaction("shapes", ["calendar_id", "shape_id", "shape_pt_lat", "shape_pt_lon", "shape_pt_sequence", "shape_dist_traveled"]);
 
-        newHeaders.push("shape");
-
-        for (let row of rows) {
-            const shapeId = BaseModel.getColumn("shape_id", headers, row);
-            if (!filteredRows[shapeId])
-                filteredRows[shapeId] = { parsed: false, rows: [] }
-
-            filteredRows[shapeId].rows.push(row);
-        }
-
-        for (let row of rows) {
-            const shapeId = BaseModel.getColumn("shape_id", headers, row);
-            
-            if (!filteredRows[shapeId].parsed) {
-                filteredRows[shapeId].parsed = true;
-                
-                const shapePositions = filteredRows[shapeId].rows;
-                const positions = {};
-                for (let pos of shapePositions) {
-                    let seq = BaseModel.getColumn("shape_pt_sequence", headers, pos);
-                    let lng = BaseModel.getColumn("shape_pt_lon", headers, pos);
-                    let lat = BaseModel.getColumn("shape_pt_lat", headers, pos);
-                    let dist = normalizeDistance(system, BaseModel.getColumn("shape_dist_traveled", headers, pos)) || 0;
-
-                    positions[seq] = {pos: [parseFloat(lng), parseFloat(lat)], distance: dist };
-                    
-                }
-                row.push(positions);
-                newRows.push(row);
-            }
-        }
-
-        return [newRows, newHeaders];
+        insert(rows.map(row => {
+            return [
+                calendarId,
+                BaseModel.getColumn("shape_id", headers, row),
+                parseFloat(BaseModel.getColumn("shape_pt_lat", headers, row)),
+                parseFloat(BaseModel.getColumn("shape_pt_lon", headers, row)),
+                BaseModel.getColumn("shape_pt_sequence", headers, row),
+                normalizeDistance(system, parseFloat(BaseModel.getColumn("shape_dist_traveled", headers, row)))
+            ]
+        }));
     }
+
+    static getAllData = async (calendarId) => {
+        const db = database.get();
+
+        return db.prepare(`
+            SELECT
+            shape_id,
+            json_group_object(shape_pt_sequence,
+                json_object(
+                        'pos', json_array(shape_pt_lon, shape_pt_lat),
+                        'distance',shape_dist_traveled)
+                ) as shape
+            FROM (
+                SELECT shape_id, shape_pt_lon, shape_pt_lat, shape_dist_traveled, shape_pt_sequence 
+                FROM shapes 
+                WHERE calendar_id = ?
+                ORDER BY
+                    shape_pt_sequence ASC,
+                    shape_id ASC
+            )
+            GROUP BY shape_id
+        `).all(calendarId);
+    }
+
 }

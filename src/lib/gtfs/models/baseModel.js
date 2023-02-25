@@ -1,14 +1,8 @@
+import { database } from "../../database/singleton";
 export class BaseModel {
 
-    constructor(row, headers, system) {
-        this.headers = headers;
-        this.row = row;
+    constructor(system) {
         this.system = system;
-    }
-
-    get = (name) => {
-        if (this.headers === undefined || this.row === undefined) throw new Error("get(name) unavailable after this.registered is called.");
-        return BaseModel.getColumn(name, this.headers, this.row);
     }
 
     registered = () => {
@@ -28,5 +22,33 @@ export class BaseModel {
         if (idx == -1) throw Error(`${name} is not a valid Column.\n Valid columns ${headers}`);
 
         return row[idx];
+    }
+
+    static insertTransaction = async (tableName, columns) => {
+        const db = database.get();
+
+        const insert = db.prepare(`INSERT INTO ${tableName} (${columns.join(", ")}) VALUES (${columns.map(() => "?").join(", ")})`);
+
+        return db.transaction((rows) => {
+            for (let row of rows) {
+                insert.run(row);
+            }
+        })
+    }
+
+    static addData = async (rows, headers, system, calendarId) => {
+        throw new Error("addData(rows, headers, system, calendarId) must be implemented by the extending class.");
+    }
+
+    static selectBasic = async (tableName, columns, where, params) => {
+        const db = database.get();
+
+        const select = db.prepare(`SELECT ${columns.join(", ")} FROM ${tableName} WHERE ${where.join(" AND ")}`);
+
+        return select.all(params);
+    }
+
+    static getAllData = async (calendarId) => {
+        throw new Error("getAllData(calendarId) must be implemented by the extending class.");
     }
 }

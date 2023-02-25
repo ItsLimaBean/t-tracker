@@ -1,5 +1,5 @@
 import { calcCrow, getLngLatCenter } from "../maputil";
-import { getTimestamp } from "../timeutil";
+import { getTimestamp , getDateStr} from "../timeutil";
 
 // The minimum spacing between two shape points in KM
 // to be included in shape time interpolation.
@@ -12,6 +12,7 @@ export const buildShapeTimes = async (gtfs, tripId) => {
     const shapeId = gtfs.trips[tripId].shapeId;
 
     const shape = gtfs.shapes[shapeId].shape;
+
     const stopTimes = gtfs.stopTimes[tripId].times;
 
     const shapeTimes = {};
@@ -21,7 +22,13 @@ export const buildShapeTimes = async (gtfs, tripId) => {
         const stopSeq = i;
         const nextSeq = (parseInt(stopSeq) + 1).toString();
         const fromTime = getTimestamp(stopTimes[stopSeq].departure);
-        const endTime = getTimestamp(stopTimes[nextSeq].departure)
+        let endTime = getTimestamp(stopTimes[nextSeq].departure);
+
+        // If two stops have the same time, just add like a couple seconds to it
+        // to make sure the time interpolation works.
+        if (fromTime === endTime) {
+            endTime += 5 * 1000;
+        }
 
         let lastDist = -999999999999.0;
         for (let si in shape) {
@@ -37,7 +44,7 @@ export const buildShapeTimes = async (gtfs, tripId) => {
                 let timeoffset = (shapeDist - stopTimes[stopSeq].distance) / (stopTimes[nextSeq].distance - stopTimes[stopSeq].distance)
                 timeoffset *= (endTime - fromTime);
 
-                shapeTimes[si] = { departure_time: (fromTime + timeoffset), pos: shape[si].pos, shapeSeq: si };
+                shapeTimes[si] = { departure_time: (fromTime + timeoffset), pos: shape[si].pos, shapeSeq: si, stopSeq: stopSeq, a: stopTimes[stopSeq], b: stopTimes[nextSeq] };
             } 
         }
 
@@ -62,12 +69,15 @@ export const getCenterPoints = async (shape) => {
     return centres;
 }
 
-export const findCurrentStop = async (busPos, shapeTimes) => {
+export const findCurrentStop = async (busPos, shapeTimes, stopSeq) => {
     let closestDist = 9999999999.9;
     let closestSeq;
     for (let seq of shapeTimes) {
         const dist = calcCrow(busPos, seq.center)
-        if (dist < closestDist) {
+        const isCurrentSeq = stopSeq ? seq.fromShape.stopSeq === stopSeq : true;
+
+        if (dist < closestDist && isCurrentSeq) {
+
             closestDist = dist;
             closestSeq = seq;
         }
@@ -86,6 +96,12 @@ export const caclulateDelay = async (closestSeq) => {
     const shouldBe = (curtime - start) / (end - start);
     const rawDelay = curtime - (shouldBe + start);
     const delay = Math.round(rawDelay * -1);
+
+    if (Math.abs(delay) === Infinity) {
+        console.log(start, end, curtime, shouldBe, rawDelay)
+        console.log(closestSeq.fromShape);
+        console.log(closestSeq.nextShape);
+    }
 
     return delay;
     
