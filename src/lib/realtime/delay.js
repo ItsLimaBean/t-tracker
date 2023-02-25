@@ -44,7 +44,7 @@ export const buildShapeTimes = async (gtfs, tripId) => {
                 let timeoffset = (shapeDist - stopTimes[stopSeq].distance) / (stopTimes[nextSeq].distance - stopTimes[stopSeq].distance)
                 timeoffset *= (endTime - fromTime);
 
-                shapeTimes[si] = { departure_time: (fromTime + timeoffset), pos: shape[si].pos, shapeSeq: si, stopSeq: stopSeq, a: stopTimes[stopSeq], b: stopTimes[nextSeq] };
+                shapeTimes[si] = { departure_time: (fromTime + timeoffset), pos: shape[si].pos, shapeSeq: si, stopSeq: stopSeq };
             } 
         }
 
@@ -96,12 +96,6 @@ export const caclulateDelay = async (closestSeq) => {
     const shouldBe = (curtime - start) / (end - start);
     const rawDelay = curtime - (shouldBe + start);
     const delay = Math.round(rawDelay * -1);
-
-    if (Math.abs(delay) === Infinity) {
-        console.log(start, end, curtime, shouldBe, rawDelay)
-        console.log(closestSeq.fromShape);
-        console.log(closestSeq.nextShape);
-    }
 
     return delay;
     
