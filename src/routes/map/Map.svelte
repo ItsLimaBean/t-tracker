@@ -1,7 +1,7 @@
 <script>
     import maplibregl from "maplibre-gl";
     import { onMount, onDestroy } from "svelte";
-    import { PUBLIC_MAPTILER_KEY } from "$env/static/public";
+    import { PUBLIC_MAP_STYLE } from "$env/static/public";
     import { loadImages } from "../../lib/map/images";
     import { emptyLineString, routeLayerStyle, busesLayerStyle, generateBuses, routeStopsLayerStyle, emptyCollection } from "../../lib/map/geojson";
     import { parseHash } from "../../lib/urlutil";
@@ -131,7 +131,7 @@
 
         map = new maplibregl.Map({
             container: containerElement,
-            style: `https://api.maptiler.com/maps/streets-v2/style.json?key=${PUBLIC_MAPTILER_KEY}`,
+            style: PUBLIC_MAP_STYLE,
             center: [-122.9656204, 49.2204609],
             zoom: 11,
             maxBounds: [[-123.506427,48.949414],[-121.39,49.48535]],
