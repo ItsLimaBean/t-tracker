@@ -100,7 +100,6 @@
     const loadShape = async (shapeId, system, color) => {
         if (!shapeCache[shapeId]) {
             shapeCache[shapeId] = await (await fetch(`../api/shapes/${shapeId}?sys=${system}`)).json();
-            console.log(shapeCache[shapeId].properties.color = color)
             shapeCache[shapeId].properties.color = color;
         }
 
@@ -129,6 +128,7 @@
         requestBuses();
         updateInterval = setInterval(requestBuses, 15000);
         
+
         map = new maplibregl.Map({
             container: containerElement,
             style: `https://api.maptiler.com/maps/streets-v2/style.json?key=${PUBLIC_MAPTILER_KEY}`,

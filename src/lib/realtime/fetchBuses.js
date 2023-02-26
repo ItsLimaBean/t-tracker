@@ -43,16 +43,16 @@ const formatBCTCFV = async (positions) => {
 
         if (trip) {
             tripId = trip.tripId;
+            route = trip.routeId.replace("-CFV", "");
+
             if (gtfs["bct/cfv"].trips[tripId]) {
-                route = trip.routeId.replace("-CFV", "");
                 route = parseInt(route).toString().padStart(3, "0");
     
                 dest = gtfs["bct/cfv"].trips[tripId].tripHeadsign;
+            } else if (gtfs["bct/cfv"].routes[trip.routeId]) {
+                dest = gtfs["bct/cfv"].routes[trip.routeId].routeName;
             }
-            
-            route = trip.routeId.replace("-CFV", "");
 
-            dest = gtfs["bct/cfv"].routes[trip.routeId].routeName;
         } else {
             dest = "NOT IN SERVICE"
             route = "NIS";

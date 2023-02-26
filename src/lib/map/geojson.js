@@ -96,9 +96,9 @@ export const generateBuses = (buses) => {
             return {
                 "type": "Feature",
                 "properties": {
-                    "id": `${value.id}`,
+                    "id": value.id,
                     "text": `${value.route}\n\n${value.model.displayId}`,
-                    "shape": `${value.shape}`,
+                    "shape": value.shape,
                     "marker": `bus_${value.icon}`,
                 },
                 "geometry": {
