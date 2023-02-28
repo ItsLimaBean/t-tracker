@@ -1,5 +1,4 @@
 <script>
-    import { onMount } from "svelte";
     import { Collapse, Navbar, NavbarBrand, NavbarToggler, Nav, NavItem, NavLink } from "sveltestrap";
     import { page } from "$app/stores";
 
@@ -15,7 +14,7 @@
 
 </script>
 
-<Navbar color="light" light expand="md">
+<Navbar color="dark" dark expand="md">
     <NavbarBrand href="/">T Tracker</NavbarBrand>
     <NavbarToggler on:click={toggle}/>
     <Collapse {isOpen} navbar expand="md" on:update={update}>

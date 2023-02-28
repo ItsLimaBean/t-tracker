@@ -76,7 +76,7 @@
         lastBusId = bus.id;
         if (isNew) {
             popup.on("close", (event) => {
-                if (event.target.dispatchClose) {
+                if (event.target.dispatchClose && bus) {
                     dispatch("close", { busId: bus.id });
                 }
             });
@@ -119,10 +119,13 @@
                 <span>Vehicle {bus.model.displayId} - <small>{bus.model.operator}</small></span>
             </Row>
             <Row><small>{bus.model.name}</small></Row>
-            <Row>
-                <!-- svelte-ignore a11y-invalid-attribute -->
-                <span><a href="javascript:;" on:click={onTripViewClick}>View Trip</a></span>
-            </Row>
+            {#if bus.trip}
+                <Row>
+                    <!-- svelte-ignore a11y-invalid-attribute -->
+                    <span><a href="javascript:;" on:click={onTripViewClick}>View Trip</a></span>
+                </Row>
+            {/if}
+
             {#if bus.nextStop}
                 <Row>
                     <small>Next Stop: {bus.nextStop}</small>

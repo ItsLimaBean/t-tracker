@@ -30,7 +30,7 @@ export const buildShapeTimes = async (gtfs, tripId) => {
             endTime += 5 * 1000;
         }
 
-        let lastDist = -999999999999.0;
+        let lastDist = -Infinity;
         for (let si in shape) {
             const shapeDist = shape[si].distance;
             if (shapeDist >= stopTimes[stopSeq].distance){
@@ -70,7 +70,7 @@ export const getCenterPoints = async (shape) => {
 }
 
 export const findCurrentStop = async (busPos, shapeTimes, stopSeq) => {
-    let closestDist = 9999999999.9;
+    let closestDist = Infinity;
     let closestSeq;
     for (let seq of shapeTimes) {
         const dist = calcCrow(busPos, seq.center)
