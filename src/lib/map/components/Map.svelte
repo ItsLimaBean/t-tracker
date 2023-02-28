@@ -3,7 +3,7 @@
     import { onMount, onDestroy } from "svelte";
     import { PUBLIC_MAP_STYLE } from "$env/static/public";
     import { loadImages } from "$lib/map/images";
-    import { emptyLineString, routeLayerStyle, busesLayerStyle, generateBuses, routeStopsLayerStyle, emptyCollection } from "../geojson";
+    import { emptyLineString, routeLayerStyle, busesLayerStyle, generateBuses, routeStopsLayerStyle, emptyCollection } from "$lib/map/geojson";
     import { parseHash } from "$lib/urlutil";
     import { ShowBusStopsOnRoute } from "./store";
     import Popup from "./Popup.svelte";
@@ -195,7 +195,6 @@
 </script>
 
 <div class="map" bind:this={containerElement}></div>
-<!-- <Popup bus={selectedBus} map={map} mapReady={mapReady} on:close={onPopupClose} on:open={onPopupOpen}></Popup> -->
 <Popup bus={selectedBus} map={map} mapReady={mapReady} on:close={onPopupClose}></Popup>
 <Settings map={map} mapReady={mapReady} ></Settings>
 

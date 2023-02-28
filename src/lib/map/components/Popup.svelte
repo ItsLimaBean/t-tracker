@@ -87,6 +87,7 @@
 </script>
 
 
+<!-- TODO: Clean this mess of HTML up. -->
 <div class="popup-wrapper">
     <div bind:this={html}>
         {#if mapReady === true && bus !== undefined}
