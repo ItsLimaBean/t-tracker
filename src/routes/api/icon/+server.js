@@ -1,4 +1,4 @@
-import { convert } from "convert-svg-to-png";
+import c from "convert-svg-to-png";
 
 export const GET = async ({ url }) => {
     const svg = `<svg id="svgContent" version="1.1" width="512" height="512" style="position: relative; width: 512px; height: 512px; margin:auto; user-select: none; cursor: default;"
@@ -11,7 +11,7 @@ export const GET = async ({ url }) => {
         </g>
     </svg>`;
 
-    return new Response(await convert(svg), {
+    return new Response(await c.convert(svg), {
         headers: {
             "content-type": "image/png"
         }

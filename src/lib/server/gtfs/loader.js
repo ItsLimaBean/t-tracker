@@ -124,8 +124,7 @@ export const loadGTFS = async () => {
     database.init();
 
 
-    const currentDir = new URL('.', import.meta.url).pathname;
-    const protoRoot = await protobuf.load(`${currentDir}gtfs-realtime.proto`);
+    const protoRoot = await protobuf.load(`gtfs-realtime.proto`);
     
     gtfs.feedMessage = protoRoot.lookupType("transit_realtime.FeedMessage");
 
