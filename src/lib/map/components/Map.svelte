@@ -2,11 +2,11 @@
     import maplibregl from "maplibre-gl";
     import { onMount, onDestroy } from "svelte";
     import { PUBLIC_MAP_STYLE } from "$env/static/public";
-    import { loadImages } from "../../lib/map/images";
-    import { emptyLineString, routeLayerStyle, busesLayerStyle, generateBuses, routeStopsLayerStyle, emptyCollection } from "../../lib/map/geojson";
-    import { parseHash } from "../../lib/urlutil";
+    import { loadImages } from "$lib/map/images";
+    import { emptyLineString, routeLayerStyle, busesLayerStyle, generateBuses, routeStopsLayerStyle, emptyCollection } from "../geojson";
+    import { parseHash } from "$lib/urlutil";
     import { ShowBusStopsOnRoute } from "./store";
-    import Popup from "./Popup.svelte"
+    import Popup from "./Popup.svelte";
     import Settings from "./Settings.svelte";
 
     export let requestUrl; //../api/buses

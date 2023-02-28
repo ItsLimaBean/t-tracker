@@ -1,5 +1,5 @@
 <script>
-	import Map from "./Map.svelte";
+	import Map from "$lib/map/components/Map.svelte";
 
 </script>
 <div class="map-container">

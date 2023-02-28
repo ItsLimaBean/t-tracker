@@ -28,12 +28,10 @@ const buildShapeFeature = async (id, system) => {
 
 }
 
-
 export const GET = async ({ params, url }) => {
     try {
         const system = url.searchParams.get("sys");
         if (!gtfs[system]) throw new SystemNotFoundError(system);
-
 
         const shapeFeatures = await buildShapeFeature(params.slug, system);
 

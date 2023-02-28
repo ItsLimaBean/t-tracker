@@ -1,7 +1,7 @@
 <script>
 	import maplibregl from "maplibre-gl";
-    import { BusDelayColors } from "../../lib/colors";
-    import { formatDelayTime } from "../../lib/map/delay";
+    import { BusDelayColors } from "$lib/colors";
+    import { formatDelayTime } from "$lib/map/delay";
 	import { createEventDispatcher, onDestroy } from "svelte";
     import { ShowBusPicture } from "./store";
 

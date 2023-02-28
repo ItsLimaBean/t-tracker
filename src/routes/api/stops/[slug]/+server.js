@@ -7,7 +7,7 @@ const buildtTripStopsFeature = async (id, system) => {
         throw new TripNotFoundError(id);
     }
     const stopTimes = systemGTFS.stopTimes[id];
-    if (stopTimes === undefined) {
+    if (!stopTimes === undefined) {
         throw new StopTimeNotFoundError(id);
     }
 
@@ -28,7 +28,6 @@ const buildtTripStopsFeature = async (id, system) => {
         })
     }
 }
-
 
 export const GET = async ({ params, url }) => {
     try {
