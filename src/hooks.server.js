@@ -1,4 +1,4 @@
-import { gtfsLoaded } from "./lib/gtfs/loader"
+import { gtfsLoaded } from "$lib/server/gtfs/loader"
 
 export const handle = async ({event, resolve}) => {
     await gtfsLoaded();

@@ -1,8 +1,8 @@
-import gtfs from "../gtfs/gtfsSingleton";
+import gtfs from "$lib/server/gtfs/gtfsSingleton";
 import { caclulateDelay, buildShapeTimes, getCenterPoints, findCurrentStop } from "./delay";
-import { getBusModelInfo } from "../gtfs/fleet";
+import { getBusModelInfo } from "$lib/server/gtfs/fleet";
 import { findNextStopFromShape } from "./stoputil";
-import { DefaultColor } from "../colors";
+import { DefaultColor } from "$lib/colors";
 
 export const getBusIcon = (delay) => {
     if (typeof delay !== "number" || Math.abs(delay) === Infinity) {

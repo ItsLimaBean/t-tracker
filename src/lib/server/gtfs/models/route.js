@@ -1,5 +1,5 @@
 import { BaseModel } from "./baseModel";
-import { DefaultColor } from "../../colors";
+import { DefaultColor } from "$lib/colors";
 
 export class Route extends BaseModel {
     constructor(data, system) {

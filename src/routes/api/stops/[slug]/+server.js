@@ -1,5 +1,5 @@
-import { StopTimeNotFoundError, TripNotFoundError, SystemNotFoundError } from "../../../../lib/errors";
-import gtfs from "../../../../lib/gtfs/gtfsSingleton";
+import { StopTimeNotFoundError, TripNotFoundError, SystemNotFoundError } from "$lib/server/errors";
+import gtfs from "$lib/server/gtfs/gtfsSingleton";
 
 const buildtTripStopsFeature = async (id, system) => {
     const systemGTFS = gtfs[system];

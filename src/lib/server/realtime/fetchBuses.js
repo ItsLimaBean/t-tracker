@@ -1,6 +1,6 @@
 import { TRANSLINK_API_KEY } from "$env/static/private";
-import gtfs from "../gtfs/gtfsSingleton";
-import { getTimeFormat } from "../timeutil";
+import gtfs from "$lib/server/gtfs/gtfsSingleton";
+import { getTimeFormat } from "$lib/timeutil";
 
 const formatTranslink = async (data) => {
     return data.map((bus) => {

@@ -1,5 +1,5 @@
 import { get } from "svelte/store";
-import { fetchBuses } from "../fetchBuses";
+import { fetchBuses } from "$lib/server/realtime/fetchBuses";
 import { buses, cacheTime } from "./cacheStore";
 
 const BusCacheTime = 90; // use at least 120 for production

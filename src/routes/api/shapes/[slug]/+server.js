@@ -1,5 +1,5 @@
-import { ShapeNotFoundError, SystemNotFoundError } from "../../../../lib/errors";
-import gtfs from "../../../../lib/gtfs/gtfsSingleton";
+import { ShapeNotFoundError, SystemNotFoundError } from "$lib/server/errors";
+import gtfs from "$lib/server/gtfs/gtfsSingleton";
 
 const buildShapeFeature = async (id, system) => {
     const systemGTFS = gtfs[system];

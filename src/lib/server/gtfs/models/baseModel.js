@@ -1,4 +1,4 @@
-import { database } from "../../database/singleton";
+import { database } from "$lib/server/database/singleton";
 export class BaseModel {
 
     constructor(system) {

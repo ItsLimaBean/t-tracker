@@ -1,5 +1,5 @@
-import { buildBuses } from "../../../lib/realtime/busBuilder";
-import { getBuses } from "../../../lib/realtime/cache/realtimeCache"
+import { buildBuses } from "$lib/server/realtime/busBuilder";
+import { getBuses } from "$lib/server/realtime/cache/realtimeCache"
 
 
 export const GET = async ({ url }) => {

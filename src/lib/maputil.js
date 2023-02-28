@@ -22,29 +22,27 @@ export const getLngLatCenter = (lngLatInDegr) => {
     function rad2degr(rad) { return rad * 180 / Math.PI; }
     function degr2rad(degr) { return degr * Math.PI / 180; }
 
-    var LATIDX = 0;
-    var LNGIDX = 1;
-    var sumX = 0;
-    var sumY = 0;
-    var sumZ = 0;
+    let sumX = 0;
+    let sumY = 0;
+    let sumZ = 0;
 
-    for (var i=0; i<lngLatInDegr.length; i++) {
-        var lat = degr2rad(lngLatInDegr[i][1]);
-        var lng = degr2rad(lngLatInDegr[i][0]);
+    for (let i=0; i<lngLatInDegr.length; i++) {
+        let lat = degr2rad(lngLatInDegr[i][1]);
+        let lng = degr2rad(lngLatInDegr[i][0]);
         // sum of cartesian coordinates
         sumX += Math.cos(lat) * Math.cos(lng);
         sumY += Math.cos(lat) * Math.sin(lng);
         sumZ += Math.sin(lat);
     }
 
-    var avgX = sumX / lngLatInDegr.length;
-    var avgY = sumY / lngLatInDegr.length;
-    var avgZ = sumZ / lngLatInDegr.length;
+    const avgX = sumX / lngLatInDegr.length;
+    const avgY = sumY / lngLatInDegr.length;
+    const avgZ = sumZ / lngLatInDegr.length;
 
     // convert average x, y, z coordinate to latitude and longtitude
-    var lng = Math.atan2(avgY, avgX);
-    var hyp = Math.sqrt(avgX * avgX + avgY * avgY);
-    var lat = Math.atan2(avgZ, hyp);
+    const lng = Math.atan2(avgY, avgX);
+    const hyp = Math.sqrt(avgX * avgX + avgY * avgY);
+    const lat = Math.atan2(avgZ, hyp);
 
     return [rad2degr(lng), rad2degr(lat)];
 }

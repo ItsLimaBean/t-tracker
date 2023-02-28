@@ -8,11 +8,10 @@ import { Stop } from "./models/stop";
 import { Route } from "./models/route";
 import protobuf from "protobufjs";
 
-import { database } from "../database/singleton";
+import { database } from "$lib/server/database/singleton";
 import { Calendar } from "./models/calendar";
-import { getNumberDate } from "../timeutil";
+import { getNumberDate } from "$lib/timeutil";
 
-import fs from "fs";
 
 let initState = 0;
 let statePromise;

@@ -1,5 +1,5 @@
-import { database } from "../../database/singleton";
-import { normalizeDistance } from "../../timeutil";
+import { database } from "$lib/server/database/singleton";
+import { normalizeDistance } from "$lib/timeutil";
 import { BaseModel } from "./baseModel";
 
 export class Shape extends BaseModel {

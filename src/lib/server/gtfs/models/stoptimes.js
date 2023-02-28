@@ -1,6 +1,6 @@
-import { normalizeDistance } from "../../timeutil";
+import { normalizeDistance } from "$lib/timeutil";
 import { BaseModel } from "./baseModel";
-import { database } from "../../database/singleton";
+import { database } from "$lib/server/database/singleton";
 
 export class StopTime extends BaseModel {
     constructor(data, system) {

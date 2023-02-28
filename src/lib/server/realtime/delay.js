@@ -1,5 +1,5 @@
-import { calcCrow, getLngLatCenter } from "../maputil";
-import { getTimestamp , getDateStr} from "../timeutil";
+import { calcCrow, getLngLatCenter } from "$lib/maputil";
+import { getTimestamp } from "$lib/timeutil";
 
 // The minimum spacing between two shape points in KM
 // to be included in shape time interpolation.
