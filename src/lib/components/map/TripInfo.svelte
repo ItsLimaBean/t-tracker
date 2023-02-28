@@ -10,7 +10,6 @@
     }
 
     const fetchTripData = async () => {
-        console.log(tripInfo)
         tripData = await (await fetch(`/api/trip/${tripInfo.tripId}?sys=${tripInfo.system}`)).json();
         open = true;
     }

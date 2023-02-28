@@ -214,7 +214,7 @@
     @import "maplibre-gl/dist/maplibre-gl.css";
 
     .debug {
-        top: 0;
+        top: 56px;
         left: 50px;
         position: absolute;
         background-color: white;

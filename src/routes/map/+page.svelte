@@ -1,18 +1,23 @@
 <script>
 	import Map from "$lib/components/map/Map.svelte";
+    import { Row, Col } from "sveltestrap";
 
 </script>
-<div class="map-container">
-    <Map requestUrl="/api/buses" hash={true}></Map>
-</div>
+<Row>
+    <Col id="map-container-col">
+        <div class="map-container">
+            <Map requestUrl="/api/buses" hash={true}></Map>
+        </div>
+    </Col>
+</Row>
 
 <style>
-    :global(body) {
-        margin: 0;
-    }
-
     .map-container {
         width: 100vw;
-        height: 100vh;
+        height: calc(100vh - 56px);
+    }
+
+    :global(#map-container-col) {
+        padding: 0;
     }
 </style>

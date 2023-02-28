@@ -1,6 +1,7 @@
 <script>    
     import { browser } from "$app/environment";
-    import { Styles } from "sveltestrap";
+    import Navbar from "$lib/components/Navbar.svelte";
+    import { Styles, Container } from "sveltestrap";
 
     const registerServiceWorker = async () => {
         if (browser && "serviceWorker" in navigator) {
@@ -23,7 +24,10 @@
 
 <main>
     <Styles />
-    <slot />
+    <Navbar/>
+    <Container fluid={true}>
+        <slot />
+    </Container>
 </main>
 
 <style>

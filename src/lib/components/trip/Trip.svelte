@@ -1,15 +1,8 @@
 <script>
-    import { onMount } from "svelte";
-    import { Container, ListGroup, ListGroupItem, Row, Col } from "sveltestrap";
+    import { ListGroup, ListGroupItem, Row, Col } from "sveltestrap";
 
 
     export let tripData;
-
-    // let tripData;
-
-    // onMount(async () => {
-    //     tripData = await (await fetch(`/api/trip/${tripId}?sys=${system}`)).json();
-    // });
 </script>
 
 
