@@ -5,9 +5,10 @@
     import { loadImages } from "$lib/map/images";
     import { emptyLineString, routeLayerStyle, busesLayerStyle, generateBuses, routeStopsLayerStyle, emptyCollection } from "$lib/map/geojson";
     import { parseHash } from "$lib/urlutil";
-    import { ShowBusStopsOnRoute } from "./store";
-    import Popup from "./Popup.svelte";
-    import Settings from "./Settings.svelte";
+    import { ShowBusStopsOnRoute } from "$lib/components/map/store";
+    import Popup from "$lib/components/map/Popup.svelte";
+    import Settings from "$lib/components/map/Settings.svelte";
+    import TripInfo from "$lib/components/map/TripInfo.svelte";
 
     export let requestUrl; //../api/buses
     export let hash;
@@ -28,6 +29,8 @@
     let updateInterval;
 
     let processedHash = false;
+
+    let viewTripInfo;
 
     const debug = { zoom: -1 }
 
@@ -124,6 +127,10 @@
         selectedBus = bus;
     }
 
+    const onTripView = (event) => {
+        viewTripInfo = event.detail;
+    }
+
     onMount(() => {
         requestBuses();
         updateInterval = setInterval(requestBuses, 15000);
@@ -195,8 +202,9 @@
 </script>
 
 <div class="map" bind:this={containerElement}></div>
-<Popup bus={selectedBus} map={map} mapReady={mapReady} on:close={onPopupClose}></Popup>
-<Settings map={map} mapReady={mapReady} ></Settings>
+<Popup bus={selectedBus} map={map} mapReady={mapReady} on:close={onPopupClose} on:tripview={onTripView}></Popup>
+<Settings map={map} mapReady={mapReady}></Settings>
+<TripInfo tripInfo={viewTripInfo}></TripInfo>
 
 <div class="debug">
     Zoom: {debug.zoom }

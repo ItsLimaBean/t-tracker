@@ -25,3 +25,14 @@
     <Styles />
     <slot />
 </main>
+
+<style>
+    :global(.modal-dialog) {
+        overflow-y: initial !important
+    }
+
+    :global(.modal-body) {
+        max-height: 89vh;
+        overflow-y: auto;
+    }
+</style>

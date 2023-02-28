@@ -4,6 +4,7 @@
     import { formatDelayTime } from "$lib/map/delay";
 	import { createEventDispatcher, onDestroy } from "svelte";
     import { ShowBusPicture } from "./store";
+    import { Row } from "sveltestrap";
 
     export let bus;
     export let map;
@@ -49,6 +50,10 @@
         imageState = "error";
     }
 
+    const onTripViewClick = () => {
+        dispatch("tripview", { tripId: bus.trip, system: bus.system  });
+    }
+
     const newPopup = () => {
         let isNew = false;
 
@@ -91,12 +96,39 @@
 <div class="popup-wrapper">
     <div bind:this={html}>
         {#if mapReady === true && bus !== undefined}
-            <span class="route-header"><span class="route-id rounded-pill" style:background-color={ bus.color.color } style:color={ bus.color.text }>{ bus.route }</span> { bus.dest }</span><br>
-            {#if bus.dir}{bus.dir} - {/if}{#if bus.trip }<span class="route-delay" style:color={ BusDelayColors[bus.icon]}>{ formatDelayTime(bus.delay) }</span><br>{/if}
-            Vehicle {bus.model.displayId} - <small>{bus.model.operator}</small><br>
-            <small>{bus.model.name}</small><br>
-            {#if bus.nextStop}<small>Next Stop: {bus.nextStop}</small><br>{/if}
-            <small>Updated: {bus.updated}</small><br>
+            <Row>
+                <span class="route-header">
+                    <span class="route-id rounded-pill" style:background-color={ bus.color.color } style:color={ bus.color.text }>
+                        { bus.route }
+                    </span>
+                    { bus.dest }
+                </span>
+            </Row>
+            {#if bus.dir || bus.trip}
+                <Row>
+                    <span>
+                        {#if bus.dir}{bus.dir}{/if}
+                        {#if bus.dir && bus.trip } - {/if}
+                        {#if bus.trip }
+                            <span class="route-delay" style:color={ BusDelayColors[bus.icon]}>{ formatDelayTime(bus.delay) }</span>
+                        {/if}
+                    </span>
+                </Row>
+            {/if}
+            <Row>
+                <span>Vehicle {bus.model.displayId} - <small>{bus.model.operator}</small></span>
+            </Row>
+            <Row><small>{bus.model.name}</small></Row>
+            <Row>
+                <!-- svelte-ignore a11y-invalid-attribute -->
+                <span><a href="javascript:;" on:click={onTripViewClick}>View Trip</a></span>
+            </Row>
+            {#if bus.nextStop}
+                <Row>
+                    <small>Next Stop: {bus.nextStop}</small>
+                </Row>
+            {/if}
+            <Row><small>Updated: {bus.updated}</small></Row>
             <div class="popup-image-wrapper">
                 {#if showBusPicture && fourOFourBuses.indexOf(bus.id) === -1} 
                     <img
@@ -116,7 +148,6 @@
         {/if}
 
     </div>
-    
 </div>
 
 <style>
