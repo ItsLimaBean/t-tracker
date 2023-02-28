@@ -1,8 +1,7 @@
 <script>
-	import { Modal } from "bootstrap";
 	import { onMount, onDestroy } from "svelte";
 	import { ShowBusPicture, ShowBusPictureKey, ShowBusStopsOnRouteKey, ShowBusStopsOnRoute } from "./store";
-
+    import { Modal, ModalHeader, ModalBody } from "sveltestrap";
 
     export let map;
     export let mapReady;
@@ -15,6 +14,9 @@
 
     let modalElem;
     let modal;
+
+    let open = false;
+    const toggle = () => open = !open;
 
     const settings = [
         {
@@ -37,11 +39,10 @@
 
     onMount(() => {
         ready = true;
-        modal = new Modal(modalElem);
     });
 
     onDestroy(() => {
-        modal?.hide();
+        open = false;
     });
 
 
@@ -64,31 +65,24 @@
 
 {#if showControl} 
     <div class="settings-control maplibregl-ctrl maplibregl-ctrl-group mapboxgl-ctrl mapboxgl-ctrl-group" bind:this={controlNode}>
-        <button on:click={() => modal.show()} >
+        <button on:click={() => open = true} >
             <span class="settings-control-icon maplibregl-ctrl-icon mapboxgl-ctrl-icon"></span>
         </button>
     </div>
 {/if}
 
-<div class="modal" bind:this={modalElem}>
-    <div class="modal-dialog">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h5 class="modal-title">Settings</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+
+<Modal isOpen={open} {toggle}>
+    <ModalHeader toggle={toggle}>Settings</ModalHeader>
+    <ModalBody>
+        {#each settings as setting, i (setting.id) }
+            <div class="form-check">
+                <input class="form-check-input" type="checkbox" name={setting.id} id={setting.id} bind:checked={setting.value} on:change={() => setting.update(setting)}/>
+                <label class="form-check-label" for={setting.id}>{setting.label}</label>
             </div>
-            <div class="modal-body">
-                {#each settings as setting, i (setting.id) }
-                    <div class="form-check">
-                        <input class="form-check-input" type="checkbox" name={setting.id} id={setting.id} bind:checked={setting.value} on:change={() => setting.update(setting)}/>
-                        <label class="form-check-label" for={setting.id}>{setting.label}</label>
-                    </div>
-                {/each}
-                
-            </div>
-        </div>
-    </div>
-</div>
+        {/each}
+    </ModalBody>
+</Modal>
 
 <style>
     .settings-control-icon {

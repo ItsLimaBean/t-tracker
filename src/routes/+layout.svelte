@@ -1,6 +1,6 @@
-<script>
-    import "bootstrap/dist/css/bootstrap.css";
+<script>    
     import { browser } from "$app/environment";
+    import { Styles } from "sveltestrap";
 
     const registerServiceWorker = async () => {
         if (browser && "serviceWorker" in navigator) {
@@ -22,5 +22,6 @@
 </svelte:head>
 
 <main>
+    <Styles />
     <slot />
 </main>
