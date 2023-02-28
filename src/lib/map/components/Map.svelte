@@ -99,7 +99,7 @@
     }
     const loadShape = async (shapeId, system, color) => {
         if (!shapeCache[shapeId]) {
-            shapeCache[shapeId] = await (await fetch(`../api/shapes/${shapeId}?sys=${system}`)).json();
+            shapeCache[shapeId] = await (await fetch(`/api/shapes/${shapeId}?sys=${system}`)).json();
             shapeCache[shapeId].properties.color = color;
         }
 
@@ -110,7 +110,7 @@
 
     const loadStops = async (tripId, system) => {
         if (!stopsCache[tripId]) {
-            stopsCache[tripId] = await (await fetch(`../api/stops/${tripId}?sys=${system}`)).json();
+            stopsCache[tripId] = await (await fetch(`/api/stops/${tripId}?sys=${system}`)).json();
         }
 
         if (tripId === selectedBus.trip) {
