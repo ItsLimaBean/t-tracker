@@ -1,6 +1,6 @@
 import { loadGTFS } from "$lib/server/gtfs/loader";
 import { loadSSE } from "$lib/server/realtime/realtime";
-import { CORS_ORIGIN } from "$env/static/private";
+import { PUBLIC_SITE_ORIGIN } from "$env/static/public";
 
 
 const gtfsLoaded = loadGTFS();
@@ -11,7 +11,7 @@ export const handle = async ({event, resolve}) => {
     await sseLoaded;
 
     const response = await resolve(event);
-    response.headers.append("Access-Control-Allow-Origin", CORS_ORIGIN);
+    response.headers.append("Access-Control-Allow-Origin", PUBLIC_SITE_ORIGIN);
 
     return response;
 }

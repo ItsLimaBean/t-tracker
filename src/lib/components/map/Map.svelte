@@ -1,7 +1,7 @@
 <script>
     import maplibregl from "maplibre-gl";
     import { onMount, onDestroy } from "svelte";
-    import { PUBLIC_MAP_STYLE } from "$env/static/public";
+    import { PUBLIC_MAP_STYLE, PUBLIC_SITE_ORIGIN } from "$env/static/public";
     import { loadImages } from "$lib/map/images";
     import { emptyLineString, routeLayerStyle, busesLayerStyle, generateBuses, routeStopsLayerStyle, emptyCollection } from "$lib/map/geojson";
     import { parseHash } from "$lib/urlutil";
@@ -180,6 +180,11 @@
         const sse = new ReconnectingEventSource(requestUrl);
         
         sse.addEventListener("update", (event) => {
+            const url = new URL(event.origin);
+            if (url.hostname !== PUBLIC_SITE_ORIGIN) {
+                console.error("Invalid origin: " + url.hostname);
+                return;
+            }
             buses = JSON.parse(event.data);
 
             if (selectedBus) {

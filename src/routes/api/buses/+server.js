@@ -19,7 +19,8 @@ export const GET = async ({ request }) => {
 
 	return new Response(stream, {
 		headers: {
-			"Content-Type": "text/event-stream"
+			"Content-Type": "text/event-stream",
+            "Cache-Control": "no-cache"
 		}
 	});
 }
