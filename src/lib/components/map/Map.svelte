@@ -127,6 +127,7 @@
             style: PUBLIC_MAP_STYLE,
             center: [-122.9656204, 49.2204609],
             zoom: 11,
+            minZoom: 10,
             maxBounds: [[-123.506427,48.949414],[-121.39,49.48535]],
             customAttribution: `Bus images via <a href="https://cptdb.ca/wiki/">CPTDB Wiki</a>`,
             hash: hash !== undefined ? "p" : false
