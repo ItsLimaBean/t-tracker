@@ -8,19 +8,20 @@ export const GET = async ({ request }) => {
     }
 
     const uuid = crypto.randomUUID();
-	const stream = new ReadableStream({
-		start(controller) {
+    const stream = new ReadableStream({
+        start(controller) {
             addClient(uuid, controller);
-		},
-		cancel() {
-			removeClient(uuid);
-		}
-	});
+        },
+        cancel() {
+            removeClient(uuid);
+        }
+    });
 
-	return new Response(stream, {
-		headers: {
-			"Content-Type": "text/event-stream",
-            "Cache-Control": "no-cache"
-		}
-	});
+    return new Response(stream, {
+        headers: {
+            "Content-Type": "text/event-stream",
+            "Cache-Control": "no-cache",
+            "X-Accel-Buffering": "no"
+        }
+    });
 }
