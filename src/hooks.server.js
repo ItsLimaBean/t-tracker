@@ -4,7 +4,7 @@ import { PUBLIC_SITE_ORIGIN } from "$env/static/public";
 
 
 const gtfsLoaded = loadGTFS();
-const sseLoaded = loadSSE();
+const sseLoaded = loadSSE(gtfsLoaded);
 
 export const handle = async ({event, resolve}) => {
     await gtfsLoaded;

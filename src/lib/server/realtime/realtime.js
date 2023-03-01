@@ -12,7 +12,8 @@ const getEvent = (data) => {
     return `event: update\ndata: ${JSON.stringify(data)}\n\n`;
 }
 
-export const loadSSE = async () => {
+export const loadSSE = async (gtfsLoaded) => {
+    await gtfsLoaded;// make sure static data is loaded before starting SSE
     clearInterval(get(interval));
     interval.set(setInterval(updateBuses, BusCacheTime * 1000))
     await updateBuses();
