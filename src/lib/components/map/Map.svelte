@@ -9,15 +9,15 @@
     import Popup from "$lib/components/map/Popup.svelte";
     import Settings from "$lib/components/map/Settings.svelte";
     import TripInfo from "$lib/components/map/TripInfo.svelte";
+    import ReconnectingEventSource from "reconnecting-eventsource";
 
-    export let requestUrl; //../api/buses
+    export let requestUrl;
     export let hash;
 
     let mapReady = false;
 
     let map;
 
-    let cacheId = -1;
     const shapeCache = {};
     const stopsCache = {};
 
@@ -26,7 +26,6 @@
 
     let containerElement;
 
-    let updateInterval;
 
     let processedHash = false;
 
@@ -60,17 +59,6 @@
         map.getSource("buses").setData(geoJson);
     }
 
-    const requestBuses = async () => {
-        const response = await (await fetch(`${requestUrl}?t=${cacheId}`)).json();
-        if (response.status !== "up-to-date") {
-            buses = response.buses;
-            cacheId = response.time;
-
-            if (selectedBus) {
-                selectedBus = findBus(selectedBus.id);
-            }
-        }
-    }
 
     const processHash = () => {
         if (!processedHash) {
@@ -132,8 +120,6 @@
     }
 
     onMount(() => {
-        requestBuses();
-        updateInterval = setInterval(requestBuses, 15000);
         
 
         map = new maplibregl.Map({
@@ -190,13 +176,24 @@
 
             mapReady = true;
         });
+
+        const sse = new ReconnectingEventSource(requestUrl);
+        
+        sse.addEventListener("update", (event) => {
+            buses = JSON.parse(event.data);
+
+            if (selectedBus) {
+                selectedBus = findBus(selectedBus.id);
+            }
+        });
+
+        return () => { sse.close(); }
     });
 
     onDestroy(() => {
         mapReady = false;
         map?.remove();
         map = undefined;
-        clearInterval(updateInterval);
         clearInterval(debug.interval);
     })
 </script>

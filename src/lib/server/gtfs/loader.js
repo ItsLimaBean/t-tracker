@@ -13,15 +13,6 @@ import { Calendar } from "./models/calendar";
 import { getNumberDate } from "$lib/timeutil";
 
 
-let initState = 0;
-let statePromise;
-
-export const gtfsLoaded = async () => {
-    if (initState === 0) {
-        statePromise = loadGTFS();
-    }
-    return statePromise;
-};
 
 export const unzipGTFS = async (data) => {
     const zip = new JSZip();
@@ -119,8 +110,6 @@ export const loadSystemGTFS = async (systemName) => {
 }
 
 export const loadGTFS = async () => {
-    initState = 1;
-
     database.init();
 
 
@@ -132,8 +121,6 @@ export const loadGTFS = async () => {
         loadSystemGTFS("translink"),
         loadSystemGTFS("bct/cfv")
     ]);
-
-    initState = 2;
 
     return true;
 }

@@ -1,22 +1,25 @@
-import { buildBuses } from "$lib/server/realtime/busBuilder";
-import { getBuses } from "$lib/server/realtime/cache/realtimeCache"
+import { removeClient, addClient } from "$lib/server/realtime/realtime";
+import { error } from "@sveltejs/kit";
 
 
-export const GET = async ({ url }) => {
-    const timestamp = parseFloat(url.searchParams.get("t")) || -1
-
-    const [apiBuses, time, status] = await getBuses(timestamp);
-    const builtBuses = await buildBuses(apiBuses);
-    
-    const responseObject = {
-        status: status,
-        buses: builtBuses,
-        time: time
+export const GET = async ({ request }) => {
+    if (!request.headers.get("accept") || !request.headers.get("accept").includes("text/event-stream")) {
+        throw new error(406, "Not Acceptable");
     }
 
-    return new Response(JSON.stringify(responseObject), {
-        headers: {
-            "Content-Type": "application/JSON"
-        }
-    });
+    const uuid = crypto.randomUUID();
+	const stream = new ReadableStream({
+		start(controller) {
+            addClient(uuid, controller);
+		},
+		cancel() {
+			removeClient(uuid);
+		}
+	});
+
+	return new Response(stream, {
+		headers: {
+			"Content-Type": "text/event-stream"
+		}
+	});
 }
