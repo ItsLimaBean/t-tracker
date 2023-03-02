@@ -6,8 +6,7 @@ class GTFS {
         this.stops = {};
         this.routes = {};
     }
-
-    build = (system, trips, shapes, stopTimes, stops, routes) => {
+    build = (system, shapes, routes, trips, stops, stopTimes) => {
         this[system] = {
             trips, shapes, stopTimes, stops, routes
         }

@@ -51,24 +51,22 @@ export const downloadGTFS = async (systemName) => {
 
 
 const gtfsFilesToLoad = [
-    { file: "trips", type: Trip },
     { file: "shapes", type: Shape },
-    { file: "stop_times", type: StopTime },
+    { file: "routes", type: Route },
+    { file: "trips", type: Trip },
     { file: "stops", type: Stop },
-    { file: "routes", type: Route }
+    { file: "stop_times", type: StopTime },
 ];
 
-export const loadSystemGTFS = async (systemName) => {
-
+export const updateSystemGTFS = async (systemName) => {
     const currentDate = getNumberDate();
 
-    let zipObj;    
     let serviceDates = await Calendar.selectCurrentCalendar(systemName, currentDate);
     let calendarId = serviceDates?.[0]?.id;
     if (serviceDates.length === 0) {
         console.log(`[${systemName}] No service dates found in database, downloading GTFS data...`);
         
-        zipObj = await downloadGTFS(systemName);
+        const zipObj = await downloadGTFS(systemName);
 
         console.log(`[${systemName}] Downloaded GTFS data!`);
 
@@ -88,6 +86,12 @@ export const loadSystemGTFS = async (systemName) => {
         }
     }
 
+    return calendarId
+}
+
+export const loadSystemGTFS = async (systemName) => {
+
+    const calendarId = await updateSystemGTFS(systemName);
 
     const buildData = await Promise.all(gtfsFilesToLoad.map(async (gtfsEntry) => {
         const time = new Date();
